@@ -3,6 +3,7 @@ This module contains some helper functions for printing actions and boards.
 Feel free to use and/or modify them to help you develop your program.
 """
 
+
 def print_move(n, x_a, y_a, x_b, y_b, **kwargs):
     """
     Output a move action of n pieces from square (x_a, y_a)
