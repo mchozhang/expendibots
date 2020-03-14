@@ -1,17 +1,17 @@
 import sys
 import json
 from copy import deepcopy
-from queue import Queue
+from queue import Queue, PriorityQueue
 from search.board import Board
 from search.util import print_board, print_boom, print_move
-
+import time
 
 def main():
     with open(sys.argv[1]) as file:
         data = json.load(file)
         board = Board(data)
         print_board(board.getBoardDict(), compact=False)
-        result = depthFirstSearch(board)
+        result = astar(board)
         printSolution(result)
 
 
@@ -21,7 +21,7 @@ def depthFirstSearch(board):
 
     while stack:
         current = stack.pop()
-        if len(current.blackCells) == 0:
+        if len(current.getBlackCells()) == 0:
             return current
 
         explored.add(str(current))
@@ -35,28 +35,52 @@ def depthFirstSearch(board):
 
 def breathFirstSearch(board):
     queue = Queue()
-    queueSet = set()
     explored = set()
 
+    explored.add(board)
     queue.put(board)
-    queueSet.add(str(board))
 
     while queue:
         current = queue.get()
-        queueSet.remove(str(current))
-        print(len(current.path))
-        if len(current.blackCells) == 0:
+        if len(current.getBlackCells()) == 0:
             return current
 
-        explored.add(str(current))
         for action in current.getValidActions():
             newNode = deepcopy(current)
             newNode.takeAction(action)
-
-            if str(newNode) not in explored and str(newNode) not in queueSet:
+            if newNode not in explored:
+                explored.add(newNode)
                 queue.put(newNode)
-                queueSet.add(str(newNode))
     return None
+
+
+def aStarSearch(board):
+    queue = PriorityQueue()
+    explored = set()
+
+    queue.put((blackNumberHeuristic(board), board))
+    explored.add(board)
+
+    while not queue.empty():
+        v, current = queue.get()
+        if len(current.getBlackCells()) == 0:
+            return current
+
+        for action in current.getValidActions():
+            newNode = deepcopy(current)
+            newNode.takeAction(action)
+            if newNode not in explored:
+                explored.add(newNode)
+                priority = blackNumberHeuristic(newNode) + len(newNode.path)
+                queue.put((priority, newNode))
+    return None
+
+
+def blackNumberHeuristic(board):
+    """
+    black cells remained
+    """
+    return len(board.getBlackCells())
 
 
 def printSolution(board):
@@ -73,5 +97,12 @@ def printSolution(board):
             print_move(action[0], action[1], action[2], action[3], action[4])
 
 
+# abbreviation of searching
+dfs = depthFirstSearch
+bfs = breathFirstSearch
+astar = aStarSearch
+
 if __name__ == '__main__':
+    start = time.time()
     main()
+    print('#', time.time() - start)
