@@ -6,11 +6,12 @@ from search.board import Board
 from search.util import print_board, print_boom, print_move
 import time
 
+
 def main():
     with open(sys.argv[1]) as file:
         data = json.load(file)
         board = Board(data)
-        print_board(board.getBoardDict(), compact=False)
+        print_board(board.board, compact=False)
         result = astar(board)
         printSolution(result)
 
@@ -62,7 +63,7 @@ def aStarSearch(board):
     explored.add(board)
 
     while not queue.empty():
-        v, current = queue.get()
+        current = queue.get()[1]
         if len(current.getBlackCells()) == 0:
             return current
 
@@ -71,14 +72,18 @@ def aStarSearch(board):
             newNode.takeAction(action)
             if newNode not in explored:
                 explored.add(newNode)
-                priority = blackNumberHeuristic(newNode) + len(newNode.path)
+                priority = 3 * generalHeristic(newNode) + len(newNode.path)
                 queue.put((priority, newNode))
     return None
 
 
+def generalHeristic(board):
+    return blackNumberHeuristic(board)
+
+
 def blackNumberHeuristic(board):
     """
-    black cells remained
+    number of the black cells remained
     """
     return len(board.getBlackCells())
 
@@ -87,8 +92,9 @@ def printSolution(board):
     """
     final state of the board which have found the solution
     """
-    if not board:
-        print("no solution.")
+    if board is None:
+        print("# no solution.")
+        return
 
     for action in board.path:
         if action[0] == 0:
