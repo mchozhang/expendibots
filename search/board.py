@@ -108,7 +108,6 @@ class Board:
         cells = []
         visited = set()
         board = self.board
-        dirs = [(1, -1), (1, 0), (1, 1), (0, 1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
 
         def recursiveSearch(x1, y1):
             """
@@ -130,7 +129,6 @@ class Board:
         include all valid moves and boom
         """
         cells = self.getWhiteCells() if self.turn == Board.WHITE else self.getBlackCells()
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         actions = []
 
         # find all moves
