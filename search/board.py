@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import time
+from copy import copy, deepcopy
 
 
 class Cell:
@@ -20,6 +22,9 @@ class Cell:
     def __hash__(self):
         return hash((self.pos, self.n, self.color))
 
+    def __deepcopy__(self, memodict={}):
+        return type(self)(self.x, self.y, self.n, self.color)
+
 
 class Board:
     """
@@ -28,12 +33,14 @@ class Board:
     WHITE = 0
     BLACK = 1
 
-    def __init__(self, data):
+    def __init__(self, data=None):
         """
         Args:
             data: board json object
         """
-        self.path = []
+        self.parent = None
+        self.lastAction = None
+        self.cost = 0
 
         # 0: white's turn, 1: black's turn
         self.turn = Board.WHITE
@@ -41,13 +48,15 @@ class Board:
         # dict of all not-empty cells, key: (x, y) value: Cell(), must not contain empty cell
         self.board = dict()
 
-        for token in data["white"]:
-            n, x, y = token[0], token[1], token[2]
-            self.board[(x, y)] = Cell(x, y, n, Board.WHITE)
+        # initialize board data
+        if data is not None:
+            for token in data["white"]:
+                n, x, y = token[0], token[1], token[2]
+                self.board[(x, y)] = Cell(x, y, n, Board.WHITE)
 
-        for token in data["black"]:
-            n, x, y = token[0], token[1], token[2]
-            self.board[(x, y)] = Cell(x, y, n, Board.BLACK)
+            for token in data["black"]:
+                n, x, y = token[0], token[1], token[2]
+                self.board[(x, y)] = Cell(x, y, n, Board.BLACK)
 
     def takeAction(self, action):
         """
@@ -56,8 +65,9 @@ class Board:
         Args:
             action: tuple (n, x, y, nextX, nextY)
         """
-        # extend path
-        self.path.append(action)
+        # record last action
+        self.lastAction = action
+        self.cost += 1
 
         if action[0] == 0:
             self.boom(action[1], action[2])
@@ -106,11 +116,9 @@ class Board:
             """
             cells.append(self.board[(x1, y1)])
             visited.add((x1, y1))
-            for dir in dirs:
-                nextX, nextY = x1 + dir[0], y1 + dir[1]
-                if Board.validPos(nextX, nextY) and \
-                        (nextX, nextY) in board and \
-                        (nextX, nextY) not in visited:
+
+            for (nextX, nextY) in BoardUtil.surround[(x1, y1)]:
+                if (nextX, nextY) in board and (nextX, nextY) not in visited:
                     recursiveSearch(nextX, nextY)
 
         recursiveSearch(x, y)
@@ -129,17 +137,14 @@ class Board:
         for cell in cells:
             x, y = cell.pos
             n, color = cell.n, cell.color
-            # move 1 - n tokens
-            for i in range(1, n + 1):
-                for dir in dirs:
-                    for step in range(1, n + 1):
-                        nextX, nextY = x + dir[0] * step, y + dir[1] * step
-                        if Board.validPos(nextX, nextY) and \
-                                ((nextX, nextY) not in self.board or color == self.board[(nextX, nextY)].color):
-                            actions.append((i, x, y, nextX, nextY))
 
             # boom at this position
             actions.append((0, x, y, -1, -1))
+
+            # find all valid moves
+            for (nextX, nextY) in BoardUtil.cardinal[(x, y)][n]:
+                if (nextX, nextY) not in self.board or color == self.board[(nextX, nextY)].color:
+                    actions += [(i, x, y, nextX, nextY) for i in range(1, n + 1)]
 
         return actions
 
@@ -170,6 +175,20 @@ class Board:
     def getBlackCells(self):
         return list(filter(lambda cell: cell.color == Board.BLACK, self.board.values()))
 
+    def copy(self):
+        return deepcopy(self)
+
+    def __deepcopy__(self, memodict={}):
+        """
+        deep copy of the board
+        """
+        board = type(self)()
+        board.board = deepcopy(self.board)
+        board.lastAction = self.lastAction
+        board.turn = self.turn
+        board.cost = self.cost
+        return board
+
     def __hash__(self):
         return hash(str(self.board))
 
@@ -177,10 +196,30 @@ class Board:
         return str(self.board)
 
     def __lt__(self, other):
-        return len(self.path) < len(other.path)
+        return self.cost < other.cost
 
     def __eq__(self, other):
         return isinstance(other, Board) and self.board == other.board
+
+
+class BoardUtil:
+    cardinal = dict()
+    surround = dict()
+
+    @staticmethod
+    def initialize(data):
+        """
+        parse board-data.json which contains the adjacent cell data of every cell
+        Args:
+            data: json data from board-data.json
+        """
+        for pos, steps in data["cardinal"].items():
+            BoardUtil.cardinal[eval(pos)] = dict()
+            for step, cells in steps.items():
+                BoardUtil.cardinal[eval(pos)][int(step)] = [eval(cell) for cell in cells]
+
+        for pos, cells in data["surround"].items():
+            BoardUtil.surround[eval(pos)] = [eval(cell) for cell in cells]
 
     @staticmethod
     def validPos(x, y):
