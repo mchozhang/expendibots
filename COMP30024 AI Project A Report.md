@@ -35,7 +35,7 @@ We adopted the weighted A* search to solve the problem. A* search is an informed
 
 From results of the five given test cases, we made a comparison on different perspective of performance among the A* search,  weighted A* and breath-first search algorithms:
 
-![Screen Shot 2020-03-28 at 7.46.52 AM](/Users/yiyangjin/Library/Application Support/typora-user-images/Screen Shot 2020-03-28 at 7.46.52 AM.png)
+![Comparison between diffeent algorithms](https://github.com/mchozhang/expendibots/blob/master/Performance-of-algorithms.png)
 
 - **Branching**: The maximal branching for a single state indicate the number of possible actions for that state. According to our discussion about the number of possible actions in previous paragraphs, it is primarily affected by the number and position of white tokens which defines the maximal possible moves for a single stack. And it is also affected by the position of black tokens, as we cannot move to the positions that are occupied by black tokens.
 
