@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import time
+# define data structure of Board and Cell and static utility methods
+
 from copy import copy, deepcopy
 
 
@@ -28,7 +29,7 @@ class Cell:
 
 class Board:
     """
-    board
+    board object
     """
     WHITE = 0
     BLACK = 1
@@ -168,9 +169,19 @@ class Board:
         return res
 
     def getWhiteCells(self):
+        """
+        get white cell list
+        Returns:
+            list of white cell
+        """
         return list(filter(lambda cell: cell.color == Board.WHITE, self.board.values()))
 
     def getBlackCells(self):
+        """
+        get black cell list
+        Returns:
+            list of black cell
+        """
         return list(filter(lambda cell: cell.color == Board.BLACK, self.board.values()))
 
     def copy(self):
@@ -178,7 +189,7 @@ class Board:
 
     def __deepcopy__(self, memodict={}):
         """
-        deep copy of the board
+        deep copy of the board object
         """
         board = type(self)()
         board.board = deepcopy(self.board)
@@ -201,6 +212,10 @@ class Board:
 
 
 class BoardUtil:
+    """
+    static utility methods or objects for Board
+    """
+
     cardinal = dict()
     surround = dict()
 

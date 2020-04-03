@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import sys
 import json
 from queue import Queue, PriorityQueue
@@ -12,7 +15,7 @@ def main():
         data = json.load(file)
         board = Board(data)
 
-        # print_board(board.board, compact=False)
+        print_board(board.board, compact=False)
         solutionBoard = wastar(board)
         printSolution(solutionBoard)
 
@@ -85,6 +88,7 @@ def breathFirstSearch(board):
             newNode.takeAction(action)
 
             if newNode not in explored:
+                newNode.parent = current
                 explored.add(newNode)
                 queue.put(newNode)
     return None
