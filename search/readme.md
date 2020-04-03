@@ -14,7 +14,7 @@ empty cells should not be included, so that every state of the board can be uniq
 For example, the board with 2 black tokens on the upper left corner and 1 white tokens on upper right corner can be represented 
 by `{(0, 0): "⚫, 2", (7, 7): "⚪, 1"}`.  
 In python, we use a `set` to store the board dictionaries that we have explored to avoid duplicated states, and every state should also
-record its parent pointer and the last move it takes, so that we can trace back from the final state and find the path.  
+record its parent pointer and the last action it takes, so that we can trace back from the final state and find the path.  
 
 * Actions:  
 The valid actions of a state consist of all the moves of movable stacks and booms of every white stack. We use a tuple to represent an action:
@@ -69,3 +69,7 @@ The heuristic only takes effect when a white cell reaches a black cells, which m
 a black cell. Just like `test-level-1`, this simple task is a white cell booms a black cell, for which the nodes it expands and 
 solution path it produces is almost the same as BFS, because the heuristic value won't change before it reaches the black cell. 
 However, in simple cases like this even BFS is fast enough to produce result, then our algorithm is totally acceptable.
+
+#### Conclusion
+In short, our strategy is wiping out the close and easy black cells in early stage to simplified the problem, and use simple
+blind search to handle the rest.
