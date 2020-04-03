@@ -4,7 +4,6 @@ Wenhao Zhang 970012
 Yiyang Jin 966255
 
 ### Problem Formulation
-
 The game *Expendibots* has the following properties: *observable*, *deterministic*, *sequential*, *static*, and *discrete*, 
 which allow the solution can be seen as a sequence of actions. And therefore, we can transform it into a search problem as follows:
 
@@ -14,6 +13,8 @@ We use a dictionary to record the state, in which the key is the stack position,
 empty cells should not be included, so that every state of the board can be uniquely represented.  
 For example, the board with 2 black tokens on the upper left corner and 1 white tokens on upper right corner can be represented 
 by `{(0, 0): "⚫, 2", (7, 7): "⚪, 1"}`.  
+In python, we use a `set` to store the board dictionaries that we have explored to avoid duplicated states, and every state should also
+record its parent pointer and the last move it takes, so that we can trace back from the final state and find the path.  
 
 * Actions:  
 The valid actions of a state consist of all the moves of movable stacks and booms of every white stack. We use a tuple to represent an action:
