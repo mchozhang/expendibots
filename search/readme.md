@@ -1,7 +1,6 @@
 ## COMP30024 AI Project A Report
 
-Wenhao Zhang 970012
-Yiyang Jin 966255
+Wenhao Zhang 970012 &nbsp;&nbsp; Yiyang Jin 966255
 
 ### Problem Formulation
 

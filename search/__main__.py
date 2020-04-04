@@ -6,10 +6,14 @@ import json
 from queue import Queue, PriorityQueue
 from search.board import Board, BoardUtil
 from search.util import print_board, print_boom, print_move
+import os
 
 
 def main():
-    with open(sys.argv[1]) as file, open("board-data.json") as boardFile:
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    boardDataFile = os.path.join(dir_path, "board-data.json")
+
+    with open(sys.argv[1]) as file, open(boardDataFile) as boardFile:
         BoardUtil.initialize(json.load(boardFile))
 
         data = json.load(file)
