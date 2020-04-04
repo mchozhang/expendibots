@@ -15,7 +15,7 @@ def main():
         data = json.load(file)
         board = Board(data)
 
-        print_board(board.board, compact=False)
+        # print_board(board.board, compact=False)
         solutionBoard = wastar(board)
         printSolution(solutionBoard)
 
