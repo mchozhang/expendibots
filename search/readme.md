@@ -24,7 +24,7 @@ We adopted the weighted A* search to solve the problem. A* search is an informed
 
 #### Heuristic Function
 
-In our implementation, the heuristic function returns the number of remaining black tokens in the current state. In practice, the cost $g(n)$ can easily get greater than $h(n)$, which makes heuristic value not significant enough to guide the search, therefore we use weighted A* search with coefficient `10` to enhance the heuristic function $f(n) = g(n) + 10·h(n)$.
+In our implementation, the heuristic function returns the number of remaining black stacks in the current state. In practice, the cost $g(n)$ can easily get greater than $h(n)$, which makes heuristic value not significant enough to guide the search, therefore we use weighted A* search with coefficient `10` to enhance the heuristic function $f(n) = g(n) + 10·h(n)$.
 
 #### Benefits: complexity and completeness
 
@@ -35,22 +35,22 @@ In our implementation, the heuristic function returns the number of remaining bl
 
 #### Constraints: inadmissible and non-optimal
 
-Nevertheless, the number of the remaining black tokens can be more than the actual remaining cost (e.g. one boom can eliminate 10 black tokens as long as they are connected), it violates the principle $h(n) <= h^*(n)$ for admissible heuristics and does not guarantee an optimal solution. We will address more details of this problem in the next section.
+Nevertheless, the number of the remaining black stacks can be more than the actual remaining cost (e.g. one boom can eliminate 10 black stacks as long as they are connected), it violates the principle $h(n) <= h^*(n)$ for admissible heuristics and does not guarantee an optimal solution. We will address more details of this problem in the next section.
 
 ### Influencing Factors of Time and Space
 
 The following table shows how much the performance of WA* has improved comparing to that of the Breath First Search and the A* search. The first 4 rows record the data yielded using the given test cases and the 5th row is from a more complex mutant of the level-4 test. ![Performance-of-algorithms](Performance-of-algorithms.png)
 
-According to the game rule, the branching factor is determined by the valid actions of each state, more white cells or more tokens in a stack will produce more valid actions in one state. Knowing the solution produced by BFS is the optimal, we can see that both the number of white tokens and the length of the minimal solution can significantly affect the time and space complexity.
+According to the game rule, the branching factor is determined by the valid actions of each state, more white stacks or more tokens in a stack will produce more valid actions in one state. Knowing the solution produced by BFS is the optimal, we can see that both the number of white tokens and the length of the minimal solution can significantly affect the time and space complexity.
 
 #### Occasions that our algorithm works better 
 
-Generally, our algorithms works better with complicated initial board environments than with simple ones. Our heuristic directs the search to eliminate the black tokens as soon as possible. It works well when there are a large amount of black tokens, especially discrete ones, which usually suggesting a higher difficulty level. As we can see in row 4 & 5, WA* expands 200 times fewer nodes than BFS and can complete every test within 1s. However, it does not produce optimal solutions. This is a trade-off we made between optimality and efficiency.
+Generally, our algorithms works better with complicated initial board environments than with simple ones. Our heuristic directs the search to eliminate the black stacks as soon as possible. It works well when there are a large amount of black stacks, especially discrete ones, which usually suggesting a higher difficulty level. As we can see in row 4 & 5, WA* expands 200 times fewer nodes than BFS and can complete every test within 1s. However, it does not produce optimal solutions. This is a trade-off we made between optimality and efficiency.
 
 #### Occasions that our algorithm works less satisfactory 
 
-As the heuristic only takes effect when a white tokens reach a black token, it works like a blind search when searching for black tokens before encountering them. For example, given the inputs of `test-level-1` , a simple case contains only one white token and one black token, our algorithm behaves almost the same as BFS as the heuristic value won't change before the white token reaches the black token. However, in such simple cases, even BFS is fast enough to produce a solution, then our algorithm is totally acceptable.
+As the heuristic only takes effect when a white stack reach a black stack, it works like a blind search when searching for black stacks before encountering them. For example, given the inputs of `test-level-1` , a simple case contains only one white token and one black token, our algorithm behaves almost the same as BFS as the heuristic value won't change before the white token reaches the black token. However, in such simple cases, even BFS is fast enough to produce a solution, then our algorithm is totally acceptable.
 
 #### Conclusion
 
-In short, our strategy is to wipe out the close and easy black tokens in early stage to simplified the problem, and use simple blind search to handle the rest.
+In short, our strategy is to wipe out the close and easy black stacks in early stage to simplified the problem, and use simple blind search to handle the rest.
