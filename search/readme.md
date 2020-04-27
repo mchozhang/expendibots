@@ -1,6 +1,5 @@
-## COMP30024 AI Project A Report
+## Weighted A* search
 
-Wenhao Zhang 970012 &nbsp;&nbsp; Yiyang Jin 966255
 
 ### Problem Formulation
 

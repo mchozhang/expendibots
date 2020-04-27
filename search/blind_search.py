@@ -3,7 +3,7 @@
 from queue import Queue
 
 
-def depthFirstSearch(board):
+def depth_first_search(board):
     """
     depth first search
     Args:
@@ -16,13 +16,13 @@ def depthFirstSearch(board):
 
     while stack:
         current = stack.pop()
-        if len(current.getBlackCells()) == 0:
+        if len(current.get_black_cells()) == 0:
             return current
 
         explored.add(current)
-        for action in current.getValidActions():
+        for action in current.get_valid_actions():
             newNode = current.copy()
-            newNode.takeAction(action)
+            newNode.take_action(action)
 
             if newNode not in explored:
                 newNode.parent = current
@@ -30,7 +30,7 @@ def depthFirstSearch(board):
     return None
 
 
-def breathFirstSearch(board):
+def breath_first_search(board):
     """
     breadth first search
     Args:
@@ -47,19 +47,19 @@ def breathFirstSearch(board):
 
     while queue:
         current = queue.get()
-        if len(current.getBlackCells()) == 0:
+        if len(current.get_black_cells()) == 0:
             return current
 
-        for action in current.getValidActions():
-            newNode = current.copy()
-            newNode.takeAction(action)
+        for action in current.get_valid_actions():
+            new_node = current.copy()
+            new_node.take_action(action)
 
-            if newNode not in explored:
-                newNode.parent = current
-                explored.add(newNode)
-                queue.put(newNode)
+            if new_node not in explored:
+                new_node.parent = current
+                explored.add(new_node)
+                queue.put(new_node)
     return None
 
 
-dfs = depthFirstSearch
-bfs = breathFirstSearch
+dfs = depth_first_search
+bfs = breath_first_search

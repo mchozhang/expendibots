@@ -35,11 +35,23 @@ class BoardUtil:
         return -1 < x < 8 and -1 < y < 8
 
     @staticmethod
-    def manhattanDistance(x, y, x1, y1):
+    def manhattan_distance(x, y, x1, y1):
         return abs(x - x1) + abs(y - y1)
 
     @staticmethod
-    def printSolution(board):
+    def print_action(action):
+        """
+        print an action
+        Args:
+            action: action tuple
+        """
+        if action[0] == 0:
+            print_boom(action[1], action[2])
+        else:
+            print_move(action[0], action[1], action[2], action[3], action[4])
+
+    @staticmethod
+    def print_solution(board):
         """
         traverse the predecessors of the final board to print the path
         """
@@ -51,12 +63,9 @@ class BoardUtil:
         path = []
         current = board
         while current.parent is not None:
-            path.insert(0, current.lastAction)
+            path.insert(0, current.last_action)
             current = current.parent
 
         # print the path
         for action in path:
-            if action[0] == 0:
-                print_boom(action[1], action[2])
-            else:
-                print_move(action[0], action[1], action[2], action[3], action[4])
+            BoardUtil.print_action(action)

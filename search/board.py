@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# define data structure of Board and Cell and static utility methods
+"""
+define data structure of Board and Cell and static utility methods
+"""
 
 from copy import deepcopy
 from search.board_util import BoardUtil
@@ -17,6 +19,9 @@ class Cell:
     def __repr__(self):
         s = str(self.n) + " " + str(self.pos)
         return "⚫️" + s if self.color == Board.BLACK else "⚪️" + s
+
+    def __lt__(self, other):
+        return self.pos < other.pos
 
     def __eq__(self, other):
         return self.pos == other.pos and self.n == other.n and self.color == other.color
@@ -41,7 +46,7 @@ class Board:
             data: board json object
         """
         self.parent = None
-        self.lastAction = None
+        self.last_action = None
         self.cost = 0
 
         # 0: white's turn, 1: black's turn
@@ -60,7 +65,7 @@ class Board:
                 n, x, y = token[0], token[1], token[2]
                 self.board[(x, y)] = Cell(x, y, n, Board.BLACK)
 
-    def takeAction(self, action):
+    def take_action(self, action):
         """
         pre-condition: action is valid
         move or boom a token(stack)
@@ -68,7 +73,7 @@ class Board:
             action: tuple (n, x, y, nextX, nextY)
         """
         # record last action
-        self.lastAction = action
+        self.last_action = action
         self.cost += 1
 
         if action[0] == 0:
@@ -76,42 +81,41 @@ class Board:
         else:
             self.move(action[0], action[1], action[2], action[3], action[4])
 
-    def move(self, n, x, y, nextX, nextY):
+    def move(self, n, x, y, next_x, next_y):
         """
         pre-condition: the move is valid
-        a token at (x,y) moves to (nextX, nextY)
+        a token at (x,y) moves to (next_x, next_y)
         """
-        startCell = self.board[(x, y)]
-        desCell = self.board.get((nextX, nextY), Cell(nextX, nextY, 0, startCell.color))
+        start_cell = self.board[(x, y)]
+        des_cell = self.board.get((next_x, next_y), Cell(next_x, next_y, 0, start_cell.color))
 
         # update destination cell
-        desCell.n += n
-        self.board[(nextX, nextY)] = desCell
+        des_cell.n += n
+        self.board[(next_x, next_y)] = des_cell
 
         # update start cell
-        if startCell.n == n:
+        if start_cell.n == n:
             self.board.pop((x, y))
         else:
-            startCell.n -= n
+            start_cell.n -= n
 
     def boom(self, x, y):
         """
         pre-condition: (x, y) has token
         a token or stack boom at (x, y)
         """
-        for cell in self.getBoomableCells(x, y):
+        for cell in self.get_connected_cells(x, y):
             self.board.pop(cell.pos)
 
-    def getBoomableCells(self, x, y):
+    def get_connected_cells(self, x, y):
         """
         pre-condition: (x, y) has token
         get all spots that would be boomed if (x, y) booms
         """
         cells = []
         visited = set()
-        board = self.board
 
-        def recursiveSearch(x1, y1):
+        def recursive_search(x1, y1):
             """
             find all the cells that will boom in recursion
             """
@@ -119,18 +123,18 @@ class Board:
             visited.add((x1, y1))
 
             for (nextX, nextY) in BoardUtil.surround[(x1, y1)]:
-                if (nextX, nextY) in board and (nextX, nextY) not in visited:
-                    recursiveSearch(nextX, nextY)
+                if (nextX, nextY) in self.board and (nextX, nextY) not in visited:
+                    recursive_search(nextX, nextY)
 
-        recursiveSearch(x, y)
+        recursive_search(x, y)
         return cells
 
-    def getValidActions(self):
+    def get_valid_actions(self):
         """
         find all valid actions in a single turn,
         include all valid moves and boom
         """
-        cells = self.getWhiteCells() if self.turn == Board.WHITE else self.getBlackCells()
+        cells = self.get_white_cells() if self.turn == Board.WHITE else self.get_black_cells()
         actions = []
 
         # find all moves
@@ -148,28 +152,7 @@ class Board:
 
         return actions
 
-    def getBlackPiles(self):
-        """
-        find all collections of cells that will boom if one of the tokens booms
-        Returns:
-            list of list of cells in the same pile
-        """
-        cells = set(self.getBlackCells())
-        res = []
-
-        while cells:
-            randomCell = cells.pop()
-            boomableCells = self.getBoomableCells(randomCell.x, randomCell.y)
-            pile = [randomCell]
-            for cell in boomableCells[1:]:
-                if cell.color == Board.BLACK:
-                    pile.append(cell)
-                    cells.remove(cell)
-            res.append(pile)
-
-        return res
-
-    def getWhiteCells(self):
+    def get_white_cells(self):
         """
         get white cell list
         Returns:
@@ -177,7 +160,7 @@ class Board:
         """
         return list(filter(lambda cell: cell.color == Board.WHITE, self.board.values()))
 
-    def getBlackCells(self):
+    def get_black_cells(self):
         """
         get black cell list
         Returns:
@@ -194,7 +177,7 @@ class Board:
         """
         board = type(self)()
         board.board = deepcopy(self.board)
-        board.lastAction = self.lastAction
+        board.last_action = self.last_action
         board.turn = self.turn
         board.cost = self.cost
         return board
@@ -203,7 +186,7 @@ class Board:
         return hash(str(self.board))
 
     def __repr__(self):
-        return str(self.board)
+        return str(sorted(self.board.items(), key=lambda t: t[1]))
 
     def __lt__(self, other):
         return self.cost < other.cost
