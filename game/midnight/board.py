@@ -5,52 +5,47 @@ define data structure of Board and Cell and static utility methods
 """
 
 from copy import deepcopy
-from search.board_util import BoardUtil
+from midnight.board_util import BoardUtil
 
 
 class Cell:
-    def __init__(self, x, y, n, color):
+    def __init__(self, x, y, n, colour):
         self.x = x
         self.y = y
         self.n = n
-        self.color = color
+        self.colour = colour
         self.pos = (x, y)
 
     def __repr__(self):
         s = str(self.n) + " " + str(self.pos)
-        return "⚫️" + s if self.color == Board.BLACK else "⚪️" + s
+        return "⚫️" + s if self.colour == Board.BLACK else "⚪️" + s
 
     def __lt__(self, other):
         return self.pos < other.pos
 
     def __eq__(self, other):
-        return self.pos == other.pos and self.n == other.n and self.color == other.colour
+        return self.pos == other.pos and self.n == other.n and self.colour == other.colour
 
     def __hash__(self):
-        return hash((self.pos, self.n, self.color))
+        return hash((self.pos, self.n, self.colour))
 
     def __deepcopy__(self, mem=None):
-        return type(self)(self.x, self.y, self.n, self.color)
+        return type(self)(self.x, self.y, self.n, self.colour)
 
 
 class Board:
     """
     board object
     """
-    WHITE = 0
-    BLACK = 1
+    WHITE = "white"
+    BLACK = "black"
 
-    def __init__(self, data=None):
+    def __init__(self, data=None, colour="white"):
         """
         Args:
             data: board json object
         """
-        self.parent = None
-        self.last_action = None
-        self.cost = 0
-
-        # 0: white's turn, 1: black's turn
-        self.turn = Board.WHITE
+        self.colour = Board.WHITE if colour == "white" else Board.BLACK
 
         # dict of all not-empty cells, key: (x, y) value: Cell(), must not contain empty cell
         self.board = dict()
@@ -72,14 +67,13 @@ class Board:
         Args:
             action: tuple (n, x, y, nextX, nextY)
         """
-        # record last action
-        self.last_action = action
-        self.cost += 1
-
-        if action[0] == 0:
-            self.boom(action[1], action[2])
+        if action[0] == "BOOM":
+            x, y = action[1]
+            self.boom(x, y)
         else:
-            self.move(action[0], action[1], action[2], action[3], action[4])
+            x, y = action[2]
+            next_x, next_y = action[3]
+            self.move(action[1], x, y, next_x, next_y)
 
     def move(self, n, x, y, next_x, next_y):
         """
@@ -87,7 +81,7 @@ class Board:
         a token at (x,y) moves to (next_x, next_y)
         """
         start_cell = self.board[(x, y)]
-        des_cell = self.board.get((next_x, next_y), Cell(next_x, next_y, 0, start_cell.color))
+        des_cell = self.board.get((next_x, next_y), Cell(next_x, next_y, 0, start_cell.colour))
 
         # update destination cell
         des_cell.n += n
@@ -122,9 +116,9 @@ class Board:
             cells.append(self.board[(x1, y1)])
             visited.add((x1, y1))
 
-            for (nextX, nextY) in BoardUtil.surround[(x1, y1)]:
-                if (nextX, nextY) in self.board and (nextX, nextY) not in visited:
-                    recursive_search(nextX, nextY)
+            for (next_x, next_y) in BoardUtil.surround[(x1, y1)]:
+                if (next_x, next_y) in self.board and (next_x, next_y) not in visited:
+                    recursive_search(next_x, next_y)
 
         recursive_search(x, y)
         return cells
@@ -134,21 +128,21 @@ class Board:
         find all valid actions in a single turn,
         include all valid moves and boom
         """
-        cells = self.get_white_cells() if self.turn == Board.WHITE else self.get_black_cells()
+        cells = self.get_white_cells() if self.colour == Board.WHITE else self.get_black_cells()
         actions = []
 
         # find all moves
         for cell in cells:
             x, y = cell.pos
-            n, color = cell.n, cell.color
+            n, color = cell.n, cell.colour
 
             # boom at this position
-            actions.append((0, x, y, -1, -1))
+            actions.append(("BOOM", (x, y)))
 
             # find all valid moves
-            for (nextX, nextY) in BoardUtil.cardinal[(x, y)][n]:
-                if (nextX, nextY) not in self.board or color == self.board[(nextX, nextY)].color:
-                    actions += [(i, x, y, nextX, nextY) for i in range(1, n + 1)]
+            for (next_x, next_y) in BoardUtil.cardinal[(x, y)][n]:
+                if (next_x, next_y) not in self.board or color == self.board[(next_x, next_y)].colour:
+                    actions += [("MOVE", i, (x, y), (next_x, next_y)) for i in range(1, n + 1)]
 
         return actions
 
@@ -168,6 +162,22 @@ class Board:
         """
         return list(filter(lambda cell: cell.colour == Board.BLACK, self.board.values()))
 
+    def get_white_number(self):
+        """
+        get the number of white tokens
+        Returns:
+            number of white tokens
+        """
+        return sum([cell.n for cell in self.get_white_cells()])
+
+    def get_black_number(self):
+        """
+        get the number of black tokens
+        Returns:
+            number of black tokens
+        """
+        return sum([cell.n for cell in self.get_black_cells()])
+
     def copy(self):
         return deepcopy(self)
 
@@ -177,9 +187,7 @@ class Board:
         """
         board = type(self)()
         board.board = deepcopy(self.board)
-        board.last_action = self.last_action
-        board.turn = self.turn
-        board.cost = self.cost
+        board.colour = self.colour
         return board
 
     def __hash__(self):
@@ -189,7 +197,7 @@ class Board:
         return str(sorted(self.board.items(), key=lambda t: t[1]))
 
     def __lt__(self, other):
-        return self.cost < other.cost
+        return False
 
     def __eq__(self, other):
         return isinstance(other, Board) and self.board == other.board

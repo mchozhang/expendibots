@@ -1,5 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-class ExamplePlayer:
+from midnight.q_learning_table import QLearningTable
+from midnight.board import Board, BoardUtil
+import os
+import json
+
+
+class GamePlayer:
     def __init__(self, colour):
         """
         This method is called once at the beginning of the game to initialise
@@ -11,27 +19,41 @@ class ExamplePlayer:
         program will play as (White or Black). The value will be one of the 
         strings "white" or "black" correspondingly.
         """
-        # TODO: Set up state representation.
+        self.colour = colour
+        self.last_action = None
+        self.last_board = None
 
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        csv_file_name = "white.csv" if colour == "white" else "black.csv"
+        csv_path = os.path.join(dir_path, csv_file_name)
+        initial_board_data = os.path.join(dir_path, "initial-board.json")
+        board_util_data = os.path.join(dir_path, "board-util-data.json")
+
+        with open(initial_board_data) as board_file, open(board_util_data) as util_file:
+            BoardUtil.initialize(json.load(util_file))
+
+            board_data = json.load(board_file)
+            self.q_table = QLearningTable(csv_path)
+            self.board = Board(board_data, colour)
 
     def action(self):
         """
-        This method is called at the beginning of each of your turns to request 
+        This method is called at the beginning of each of your turns to request
         a choice of action from your program.
 
-        Based on the current state of the game, your player should select and 
+        Based on the current state of the game, your player should select and
         return an allowed action to play on this turn. The action must be
         represented based on the spec's instructions for representing actions.
         """
-        # TODO: Decide what action to take, and return it
-        return ("BOOM", (0, 0))
-
+        self.last_action = self.q_table.choose_action(self.board)
+        self.last_board = self.board.copy()
+        return self.last_action
 
     def update(self, colour, action):
         """
-        This method is called at the end of every turn (including your player’s 
-        turns) to inform your player about the most recent action. You should 
-        use this opportunity to maintain your internal representation of the 
+        This method is called at the end of every turn (including your player’s
+        turns) to inform your player about the most recent action. You should
+        use this opportunity to maintain your internal representation of the
         game state and any other information about the game you are storing.
 
         The parameter colour will be a string representing the player whose turn
@@ -41,8 +63,25 @@ class ExamplePlayer:
         The parameter action is a representation of the most recent action
         conforming to the spec's instructions for representing actions.
 
-        You may assume that action will always correspond to an allowed action 
+        You may assume that action will always correspond to an allowed action
         for the player colour (your method does not need to validate the action
         against the game rules).
         """
-        # TODO: Update state representation in response to action.
+
+        next_board = self.board.copy()
+        next_board.take_action(action)
+
+        isMe = colour == self.colour
+        terminal = len(next_board.get_white_cells()) == 0 or len(next_board.get_black_cells()) == 0
+
+        if terminal and isMe:
+            reward = BoardUtil.evaluate(self.board, next_board, self.colour)
+            self.q_table.learn(self.board, next_board, action, reward)
+        elif not isMe and self.last_board:
+            reward = BoardUtil.evaluate(self.board, next_board, self.colour)
+            self.q_table.learn(self.last_board, next_board, self.last_action, reward)
+
+        if terminal:
+            self.q_table.write_csv()
+
+        self.board = next_board

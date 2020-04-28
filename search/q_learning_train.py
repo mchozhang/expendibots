@@ -6,13 +6,13 @@ import json
 from search.board import Board
 from search.board_util import BoardUtil
 from search.util import print_board
-from search.q_learning_search import QLearningBoard
+from search.q_learning_table import QLearningTable
 import os
 
 
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    board_data_file = os.path.join(dir_path, "board-data.json")
+    board_data_file = os.path.join(dir_path, "board-util-data.json")
 
     with open(sys.argv[1]) as file, open(board_data_file) as board_file:
         BoardUtil.initialize(json.load(board_file))
@@ -21,7 +21,7 @@ def main():
         board = Board(data)
         print_board(board.board, compact=False)
 
-        ql = QLearningBoard(os.path.join(dir_path, "level-1.csv"))
+        ql = QLearningTable(os.path.join(dir_path, "level-1.csv"))
         for i in range(1000):
             board = Board(data)
             while True:
@@ -37,7 +37,7 @@ def main():
                 else:
                     reward = 0
                     terminal = False
-                ql.learn(board, new_board, action, reward, terminal)
+                ql.learn(board, new_board, action, reward)
 
                 BoardUtil.print_action(action)
                 board = new_board

@@ -6,7 +6,7 @@ pre-calculate all the valid adjacent cells of each cell
 import json
 
 if __name__ == "__main__":
-    with open("board-data.json", "w") as board_file:
+    with open("board-util-data.json", "w") as board_file:
         cardinal = dict()
         surround = dict()
 

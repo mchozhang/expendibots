@@ -6,7 +6,7 @@ import pandas as pd
 import random
 
 
-class QLearningBoard:
+class QLearningTable:
     def __init__(self, csv_file):
         # learning rate
         self.alpha = 0.01
@@ -15,6 +15,7 @@ class QLearningBoard:
         # e-greedy
         self.epsilon = 0.9
 
+        self.csv_path = csv_file
         try:
             # read Q table from csv file
             self.q_table = pd.read_csv(csv_file, index_col=0)
@@ -45,7 +46,7 @@ class QLearningBoard:
 
         return action
 
-    def learn(self, board, next_board, action, reward, terminal):
+    def learn(self, board, next_board, action, reward):
         """
         update Q table values after taking an action
         Args:
@@ -53,12 +54,11 @@ class QLearningBoard:
             next_board: Board object of the next step
             action: action tuple
             reward: reward value
-            terminal: whether next_board can expand
         """
         self.fill_table(next_board)
         q_predict = self.q_table.at[str(board), action]
-
-        if terminal:
+        next_valid_action = next_board.get_valid_actions()
+        if len(next_valid_action) == 0:
             # terminal state have empty value
             q_target = reward
         else:
@@ -86,13 +86,8 @@ class QLearningBoard:
                 if action not in self.q_table.columns:
                     self.q_table[action] = 0.0 * row_len
 
-    def write_csv(self, file):
+    def write_csv(self):
         """
         write Q table to the csv file
-        Args:
-            file:
-
-        Returns:
-
         """
-        self.q_table.to_csv(file)
+        self.q_table.to_csv(self.csv_path)

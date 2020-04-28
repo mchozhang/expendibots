@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from search.util import print_board, print_boom, print_move
+from midnight.util import print_board, print_boom, print_move
 
 
 class BoardUtil:
@@ -45,27 +45,20 @@ class BoardUtil:
         Args:
             action: action tuple
         """
-        if action[0] == 0:
-            print_boom(action[1], action[2])
+        if action[0] == "BOOM":
+            x, y = action[1]
+            print_boom(x, y)
         else:
-            print_move(action[0], action[1], action[2], action[3], action[4])
+            x, y = action[2]
+            next_x, next_y = action[3]
+            print_move(action[1], x, y, next_x, next_y)
 
     @staticmethod
-    def print_solution(board):
-        """
-        traverse the predecessors of the final board to print the path
-        """
-        if board is None:
-            print("# no solution.")
-            return
-
-        # find all the predecessors
-        path = []
-        current = board
-        while current.parent is not None:
-            path.insert(0, current.last_action)
-            current = current.parent
-
-        # print the path
-        for action in path:
-            BoardUtil.print_action(action)
+    def evaluate(board, next_board, colour):
+        white_number_change = board.get_white_number() - next_board.get_white_number()
+        black_number_change = board.get_black_number() - next_board.get_black_number()
+        if colour == "white":
+            reward = black_number_change - white_number_change
+        else:
+            reward = white_number_change - black_number_change
+        return reward
