@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from midnight.q_learning_table import QLearningTable
-from midnight.board import Board, BoardUtil
+from midnight.board import Board
+from midnight.board_util import BoardUtil, evaluate_round
 import os
 import json
 
@@ -24,8 +25,8 @@ class GamePlayer:
         self.last_board = None
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        csv_file_name = "white.csv" if colour == "white" else "black.csv"
-        csv_path = os.path.join(dir_path, csv_file_name)
+        value_file_name = "white-weights.json" if colour == "white" else "black-weights.json"
+        value_file_path = os.path.join(dir_path, value_file_name)
         initial_board_data = os.path.join(dir_path, "initial-board.json")
         board_util_data = os.path.join(dir_path, "board-util-data.json")
 
@@ -33,7 +34,7 @@ class GamePlayer:
             BoardUtil.initialize(json.load(util_file))
 
             board_data = json.load(board_file)
-            self.q_table = QLearningTable(csv_path)
+            self.q_table = QLearningTable(value_file_path)
             self.board = Board(board_data, colour)
 
     def action(self):
@@ -75,13 +76,13 @@ class GamePlayer:
         terminal = len(next_board.get_white_cells()) == 0 or len(next_board.get_black_cells()) == 0
 
         if terminal and isMe:
-            reward = BoardUtil.evaluate(self.board, next_board, self.colour)
+            reward = evaluate_round(self.board, next_board, None, action, None, self.colour)
             self.q_table.learn(self.board, next_board, action, reward)
         elif not isMe and self.last_board:
-            reward = BoardUtil.evaluate(self.board, next_board, self.colour)
+            reward = evaluate_round(self.last_board, self.board, next_board, self.last_action, action, self.colour)
             self.q_table.learn(self.last_board, next_board, self.last_action, reward)
 
         if terminal:
-            self.q_table.write_csv()
+            self.q_table.write_value_file()
 
         self.board = next_board

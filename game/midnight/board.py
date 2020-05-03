@@ -162,21 +162,55 @@ class Board:
         """
         return list(filter(lambda cell: cell.colour == Board.BLACK, self.board.values()))
 
-    def get_white_number(self):
+    def white_token_cell_num(self):
         """
-        get the number of white tokens
+        get a tuple of the number of white tokens and white cells
         Returns:
-            number of white tokens
+            tuple (token_num, cell_num)
         """
-        return sum([cell.n for cell in self.get_white_cells()])
+        white_cells = self.get_white_cells()
+        return sum([cell.n for cell in white_cells]), len(white_cells)
 
-    def get_black_number(self):
+    def black_token_cell_num(self):
         """
-        get the number of black tokens
+        get a tuple of the number of black tokens and black cells
         Returns:
-            number of black tokens
+            tuple (token_num, cell_num)
         """
-        return sum([cell.n for cell in self.get_black_cells()])
+        black_cells = self.get_black_cells()
+        return sum([cell.n for cell in black_cells]), len(black_cells)
+
+    def get_own_cells(self):
+        """
+        get own cells
+        Returns:
+            list of own cell
+        """
+        return self.get_white_cells() if self.colour == "white" else self.get_black_cells()
+
+    def get_opponent_cells(self):
+        """
+        get opponents cells
+        Returns:
+            list of opponent cell
+        """
+        return self.get_white_cells() if self.colour == "black" else self.get_black_cells()
+
+    def own_token_cell_num(self):
+        """
+        get number of own tokens and cells
+        Returns:
+            tuple (token_num, cell_num)
+        """
+        return self.white_token_cell_num() if self.colour == "white" else self.black_token_cell_num()
+
+    def opponent_token_cell_num(self):
+        """
+        get number of opponent tokens and cells
+        Returns:
+            tuple (token_num, cell_num)
+        """
+        return self.white_token_cell_num() if self.colour == "black" else self.black_token_cell_num()
 
     def copy(self):
         return deepcopy(self)

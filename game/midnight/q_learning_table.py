@@ -4,27 +4,23 @@
 import numpy as np
 import pandas as pd
 import random
+import json
+from midnight.board_util import BoardUtil, marginal_num, get_own_partitions
 
 
 class QLearningTable:
-    def __init__(self, csv_file):
+    def __init__(self, values_file):
         # learning rate
         self.alpha = 0.01
         # reward decay
         self.gamma = 0.9
         # e-greedy
-        self.epsilon = 0.9
+        self.epsilon = 0.8
 
-        self.csv_path = csv_file
-        try:
-            # read Q table from csv file
-            self.q_table = pd.read_csv(csv_file, index_col=0)
-
-            # change column type to tuple
-            self.q_table.columns = [eval(col) for col in self.q_table.columns]
-
-        except Exception as e:
-            self.q_table = pd.DataFrame()
+        self.value_file = values_file
+        with open(values_file, 'r') as file:
+            self.weights = {k: float(v) for k, v in json.load(file).items()}
+            print(self.weights)
 
     def choose_action(self, board):
         """
@@ -34,16 +30,13 @@ class QLearningTable:
         Returns:
             a valid action
         """
-        self.fill_table(board)
         valid_actions = board.get_valid_actions()
 
         if np.random.uniform() < self.epsilon:
             # pick the action with the maximum value
-            actions = self.q_table.loc[str(board), valid_actions]
-            action = actions.idxmax()
+            action = max([(self.get_q_value_for_action(board, action), action) for action in valid_actions])[1]
         else:
             action = valid_actions[random.randint(0, len(valid_actions) - 1)]
-
         return action
 
     def learn(self, board, next_board, action, reward):
@@ -55,40 +48,41 @@ class QLearningTable:
             action: action tuple
             reward: reward value
         """
-        self.fill_table(next_board)
-        q_predict = self.q_table.at[str(board), action]
-        next_valid_actions = next_board.get_valid_actions()
+        q_predict = self.get_q_value_for_action(board, action)
+        q_target = reward + self.gamma * self.get_max_q_value(next_board)
 
-        if len(next_valid_actions) == 0:
-            # terminal state have empty value
-            q_target = reward
-        else:
-            q_target = reward + self.gamma * self.q_table.loc[str(next_board), next_valid_actions].max()
+        # update weights
+        for name, value in self.get_features(board, action).items():
+            self.weights[name] += self.alpha * (q_target - q_predict) * value
 
-        # update Q table
-        self.q_table.at[str(board), action] += self.alpha * (q_target - q_predict)
+    def get_features(self, board, action):
+        features = dict()
+        next_board = board.copy()
+        next_board.take_action(action)
+        partitions = get_own_partitions(next_board)
 
-    def fill_table(self, board):
+        features["own-token-num"], _ = next_board.own_token_cell_num()
+        features["opponent-num"], _ = next_board.opponent_token_cell_num()
+        features["edge-num"] = marginal_num(board)
+        features["own-partition-num"] = len(partitions)
+        return features
+
+    def get_q_value_for_action(self, board, action):
+        q_value = 0
+        for name, value in self.get_features(board, action).items():
+            q_value += self.weights[name] * value
+        return q_value
+
+    def get_max_q_value(self, board):
+        values = [self.get_q_value_for_action(board, action) for action in board.get_valid_actions()]
+        return max(values) if values else 0
+
+    def write_value_file(self):
         """
-        add new state and actions to the q_table, fill empty cell with 0
-        Args:
-            board: Board object
+        write Q table to the file
         """
-        board_str = str(board)
-        if board_str not in self.q_table.index:
-            row_len, col_len = self.q_table.shape
+        with open(self.value_file, 'w') as file:
+            data = json.dumps(self.weights)
+            file.write(data)
 
-            # append state as new row
-            row = pd.DataFrame([[0.0] * col_len], index=[board_str], columns=self.q_table.columns)
-            self.q_table = self.q_table.append(row)
 
-            # append new actions as columns
-            for action in board.get_valid_actions():
-                if action not in self.q_table.columns:
-                    self.q_table[action] = 0.0 * row_len
-
-    def write_csv(self):
-        """
-        write Q table to the csv file
-        """
-        self.q_table.to_csv(self.csv_path)

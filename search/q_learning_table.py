@@ -36,9 +36,10 @@ class QLearningTable:
         """
         self.fill_table(board)
         valid_actions = board.get_valid_actions()
-
         if np.random.uniform() < self.epsilon:
             # pick the action with the maximum value
+            q_value = 0
+            feature = self.get_features(board,)
             actions = self.q_table.loc[str(board), valid_actions]
             action = actions.idxmax()
         else:
