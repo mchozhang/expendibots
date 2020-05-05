@@ -12,13 +12,15 @@ class BoardUtil:
 
     cardinal = dict()
     surround = dict()
+    states = dict()
 
     @staticmethod
-    def initialize(data):
+    def initialize(data, state_data=None):
         """
         parse board-util-data.json which contains the adjacent cell data of every cell
         Args:
             data: json data from board-util-data.json
+            state_data: json data from board-state-data.json
         """
         for pos, steps in data["cardinal"].items():
             BoardUtil.cardinal[eval(pos)] = dict()
@@ -89,16 +91,16 @@ def token_diff_score(pre_board, mid_board, post_board, own_action, opponent_acti
     # own tokens
     if colour == "white":
         if post_white_token_num == 0:
-            bonus -= 10
+            bonus -= 5
         elif post_black_token_num == 0:
-            bonus += 10
+            bonus += 5
 
         die_token = pre_white_token_num - post_white_token_num
     else:
         if post_black_token_num == 0:
-            bonus -= 10
+            bonus -= 5
         elif post_white_token_num == 0:
-            bonus += 10
+            bonus += 5
 
         die_token = pre_black_token_num - post_black_token_num
 
@@ -106,28 +108,47 @@ def token_diff_score(pre_board, mid_board, post_board, own_action, opponent_acti
     return score
 
 
-def marginal_num(board):
+def marginal_token_num(board):
     """
-    number of own cells that are near the edge
+    number of own token that are near the edge
     Args:
         board: board object
 
     Returns:
-        marginal cell number
+        marginal token number
     """
-    cells = board.get_white_cells() if board.colour == "white" else board.get_black_cells()
-    return len(list(filter(lambda cell: cell.x == 0 or cell.x == 7 or cell.y == 0 or cell.y == 7, cells)))
+    def is_marginal(cell):
+        return cell.x == 0 or cell.y == 0 or cell.x == 7 or cell.y == 7
+
+    return sum([cell.n for cell in board.board.values() if cell.colour == board.colour and is_marginal(cell)])
 
 
-def get_own_partitions(board):
+def cornered_token_num(board):
     """
-    get partitions that contain own cells
+    number of own tokens that are in the corners
     Args:
         board: board object
     Returns:
-        list of partition set
+        cornered token number
     """
-    cells = board.get_own_cells()
+    def is_cornered(cell):
+        return cell.pos == (0, 0) or cell.pos == (0, 7) or cell.pos == (7,0) or cell.pos == (7,7)
+
+    return sum([cell.n for cell in board.board.values() if cell.colour == board.colour and is_cornered(cell)])
+
+
+def get_partitions(board, is_own):
+    """
+    get partitions that contain own(or opponent) cells,
+    a partition is a group of connected cells that will boom together
+    Args:
+        board: board object
+        is_own: own partitions or opponent partitions
+    Returns:
+        list of cell lists that contain all cells forming a partition
+    """
+    cells = board.get_own_cells() if is_own else board.get_opponent_cells()
+
     visited = set()
     partitions = []
 
@@ -135,7 +156,7 @@ def get_own_partitions(board):
         """
         find all the cells that belong to a partition
         """
-        part.add(board.board[(x, y)])
+        part.append(board.board[(x, y)])
         visited.add((x, y))
 
         for (next_x, next_y) in BoardUtil.surround[(x, y)]:
@@ -143,9 +164,35 @@ def get_own_partitions(board):
                 recursive_search(next_x, next_y, part)
 
     for cell in cells:
-        partition = set()
+        partition = []
         if cell.pos not in visited:
             recursive_search(cell.x, cell.y, partition)
             partitions.append(partition)
 
     return partitions
+
+
+def partition_kill_rate(partitions, colour):
+    """
+    calculate the maximum kill rate(average number of opponents tokens killed by an own token)
+    of all own partitions
+    Args:
+        partitions: partition list
+        colour: own color
+    Returns:
+        kil rate, float
+    """
+    max_rate = 0
+    for partition in partitions:
+        own_num, opponent_num = 0, 0
+        for cell in partition:
+            if cell.colour == colour:
+                own_num += cell.n
+            else:
+                opponent_num += cell.n
+
+        rate = opponent_num // own_num
+        if rate > max_rate:
+            max_rate = rate
+
+    return max_rate

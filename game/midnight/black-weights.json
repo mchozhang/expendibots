@@ -1,6 +1,1 @@
-{
-  "own-token-num": 0.9220548231132202,
-  "opponent-num": -0.926066161518984,
-  "edge-num": -0.013854617158306326,
-  "own-partition-num": 0.6181978540353281
-}
+{"token-diff": 3.004719274140184, "marginal-num": -1.1003439289573482, "cornered-num": -0.9176483849827404, "own-token-num-per-partition": -2.5564852269101475, "own-partition-kill-rate": 0.6757029018974485, "opponent-partition-kill-rate": -2.33916990962923}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from midnight.q_learning_table import QLearningTable
+from midnight.q_learning_table import ApproximateQLearning
 from midnight.board import Board
 from midnight.board_util import BoardUtil, evaluate_round
 import os
@@ -34,7 +34,7 @@ class GamePlayer:
             BoardUtil.initialize(json.load(util_file))
 
             board_data = json.load(board_file)
-            self.q_table = QLearningTable(value_file_path)
+            self.q_table = ApproximateQLearning(value_file_path)
             self.board = Board(board_data, colour)
 
     def action(self):

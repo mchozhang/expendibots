@@ -46,6 +46,7 @@ class Board:
             data: board json object
         """
         self.colour = Board.WHITE if colour == "white" else Board.BLACK
+        self.opponent_colour = Board.BLACK if colour == "white" else Board.WHITE
 
         # dict of all not-empty cells, key: (x, y) value: Cell(), must not contain empty cell
         self.board = dict()
@@ -128,7 +129,7 @@ class Board:
         find all valid actions in a single turn,
         include all valid moves and boom
         """
-        cells = self.get_white_cells() if self.colour == Board.WHITE else self.get_black_cells()
+        cells = self.get_own_cells()
         actions = []
 
         # find all moves
@@ -186,7 +187,7 @@ class Board:
         Returns:
             list of own cell
         """
-        return self.get_white_cells() if self.colour == "white" else self.get_black_cells()
+        return self.get_white_cells() if self.colour == Board.WHITE else self.get_black_cells()
 
     def get_opponent_cells(self):
         """
@@ -194,7 +195,7 @@ class Board:
         Returns:
             list of opponent cell
         """
-        return self.get_white_cells() if self.colour == "black" else self.get_black_cells()
+        return self.get_white_cells() if self.colour == Board.BLACK else self.get_black_cells()
 
     def own_token_cell_num(self):
         """
@@ -202,7 +203,7 @@ class Board:
         Returns:
             tuple (token_num, cell_num)
         """
-        return self.white_token_cell_num() if self.colour == "white" else self.black_token_cell_num()
+        return self.white_token_cell_num() if self.colour == Board.WHITE else self.black_token_cell_num()
 
     def opponent_token_cell_num(self):
         """
@@ -210,7 +211,7 @@ class Board:
         Returns:
             tuple (token_num, cell_num)
         """
-        return self.white_token_cell_num() if self.colour == "black" else self.black_token_cell_num()
+        return self.white_token_cell_num() if self.colour == Board.BLACK else self.black_token_cell_num()
 
     def copy(self):
         return deepcopy(self)
@@ -222,6 +223,7 @@ class Board:
         board = type(self)()
         board.board = deepcopy(self.board)
         board.colour = self.colour
+        board.opponent_colour = self.opponent_colour
         return board
 
     def __hash__(self):
