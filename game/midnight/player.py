@@ -3,7 +3,7 @@
 
 from midnight.q_learning_table import ApproximateQLearning
 from midnight.board import Board
-from midnight.board_util import BoardUtil, evaluate_round
+from midnight.board_util import BoardUtil
 import os
 import json
 
@@ -68,7 +68,6 @@ class GamePlayer:
         for the player colour (your method does not need to validate the action
         against the game rules).
         """
-
         next_board = self.board.copy()
         next_board.take_action(action)
 
@@ -76,10 +75,10 @@ class GamePlayer:
         terminal = len(next_board.get_white_cells()) == 0 or len(next_board.get_black_cells()) == 0
 
         if terminal and isMe:
-            reward = evaluate_round(self.board, next_board, None, action, None, self.colour)
+            reward = BoardUtil.evaluate_round(self.board, next_board, None, action, None, self.colour)
             self.q_table.learn(self.board, next_board, action, reward)
         elif not isMe and self.last_board:
-            reward = evaluate_round(self.last_board, self.board, next_board, self.last_action, action, self.colour)
+            reward = BoardUtil.evaluate_round(self.last_board, self.board, next_board, self.last_action, action, self.colour)
             self.q_table.learn(self.last_board, next_board, self.last_action, reward)
 
         if terminal:

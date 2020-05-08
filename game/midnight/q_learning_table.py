@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import pandas as pd
 import random
 import json
-from midnight.board_util import BoardUtil, marginal_token_num, get_partitions, partition_kill_rate, cornered_token_num
+from midnight.board_util import BoardUtil
 
 
 class ApproximateQLearning:
@@ -15,7 +14,8 @@ class ApproximateQLearning:
         # reward decay
         self.gamma = 0.9
         # e-greedy
-        self.epsilon = 0.9
+        self.epsilon = 0.8
+        # self.epsilon = 0.9
 
         self.value_file = values_file
         with open(values_file, 'r') as file:
@@ -25,7 +25,7 @@ class ApproximateQLearning:
         """
         choose an action by the Q table
         Args:
-            board: Board object
+            board: Board object with valid actions
         Returns:
             a valid action
         """
@@ -33,10 +33,21 @@ class ApproximateQLearning:
 
         if np.random.uniform() < self.epsilon:
             # pick the action with the maximum value
-            # l = [(self.get_q_value_for_action(board, action), action) for action in valid_actions]
-            # print(l)
-            action = max([(self.get_q_value_for_action(board, action), action) for action in valid_actions])[1]
+            # find all the actions with the same max q value
+            max_indices = [0]
+            max_value = self.get_q_value_for_action(board, valid_actions[0])
+            for i, action in enumerate(valid_actions[1:]):
+                value = self.get_q_value_for_action(board, action)
+                if value > max_value:
+                    max_indices = [i + 1]
+                    max_value = value
+                elif value == max_value:
+                    max_indices.append(i + 1)
+
+            # randomly pick an action with max q value
+            action = valid_actions[max_indices[random.randint(0, len(max_indices) - 1)]]
         else:
+            # random action for learning
             action = valid_actions[random.randint(0, len(valid_actions) - 1)]
             print("random action:", action)
         return action
@@ -52,30 +63,44 @@ class ApproximateQLearning:
         """
         q_predict = self.get_q_value_for_action(board, action)
         q_target = reward + self.gamma * self.get_max_q_value(next_board)
+        diff = self.alpha * (q_target - q_predict)
 
         # update weights
         for name, value in self.get_features(board, action).items():
-            self.weights[name] += self.alpha * (q_target - q_predict) * value
+            self.weights[name] += diff * value
 
     def get_features(self, board, action):
         features = dict()
         next_board = board.copy()
         next_board.take_action(action)
         own_token_num, own_cell_num = next_board.own_token_cell_num()
-        opponent_token_num, own_cell_num = next_board.opponent_token_cell_num()
+        opponent_token_num, opponent_cell_num = next_board.opponent_token_cell_num()
+        own_marginal_token_num = BoardUtil.own_marginal_token_num(next_board)
+        own_cornered_token_num = BoardUtil.own_cornered_token_num(next_board)
 
         features["token-diff"] = own_token_num - opponent_token_num
-        features["marginal-num"] = marginal_token_num(board)
-        features["cornered-num"] = cornered_token_num(board)
+        features["marginal-rate"] = own_marginal_token_num / own_token_num if own_token_num else 1
+        features["cornered-rate"] = own_cornered_token_num / own_token_num if own_token_num else 1
+        features["stack-rate"] = own_token_num / own_cell_num if own_token_num else 1
+        features["early-non-bottom-num"] = BoardUtil.early_non_bottom_num(next_board)
 
         # partition kill rate
-        own_partitions = get_partitions(next_board, True)
-        opponent_partitions = get_partitions(next_board, False)
-        own_partition_kill_rate = partition_kill_rate(own_partitions, next_board.colour)
-        opponent_partition_kill_rate = partition_kill_rate(opponent_partitions, next_board.opponent_colour)
-        features["own-token-num-per-partition"] = own_token_num // len(own_partitions) if own_token_num != 0 else 12
-        features["own-partition-kill-rate"] = own_partition_kill_rate if own_partition_kill_rate > 1 else 0
-        features["opponent-partition-kill-rate"] = opponent_partition_kill_rate if opponent_partition_kill_rate > 1 else 0
+        own_partitions = BoardUtil.get_partitions(next_board, True)
+        opponent_partitions = BoardUtil.get_partitions(next_board, False)
+        own_partition_token_diff = BoardUtil.max_partition_token_diff(own_partitions, next_board.colour)
+        opponent_partition_token_diff = BoardUtil.max_partition_token_diff(opponent_partitions, next_board.opponent_colour)
+        features["max-own-partition-token-diff"] = own_partition_token_diff if own_partition_token_diff > 1 else 0
+        features["max-opponent-partition-token-diff"] = opponent_partition_token_diff if opponent_partition_token_diff > 1 else 0
+
+        # vulnerable spots
+        own_vulnerable_spots = BoardUtil.vulnerable_spots(next_board, own_partitions, True)
+        opponent_vulnerable_spots = BoardUtil.vulnerable_spots(next_board, opponent_partitions, False)
+        own_vulnerability_reachability = BoardUtil.partition_vulnerability(own_vulnerable_spots)
+        opponent_vulnerability_reachability = BoardUtil.partition_vulnerability(opponent_vulnerable_spots)
+        features["own-vulnerability-reachability"] = own_vulnerability_reachability
+        features["opponent-vulnerability-reachability"] = opponent_vulnerability_reachability
+        # features["average-own-vulnerable-value"] = BoardUtil.average_vulnerable_value(own_vulnerable_spots, own_token_num)
+        features["opponent-leftover-chasing"] = BoardUtil.opponent_leftover_chasing(next_board, opponent_vulnerable_spots)
 
         for name, value in features.items():
             features[name] /= 10

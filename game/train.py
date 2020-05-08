@@ -3,5 +3,6 @@
 
 from subprocess import call
 
-for i in range(10):
+for i in range(150):
     call(['python', '-m', 'referee', 'midnight', 'midnight'], shell=False)
+    # call(['python', '-m', 'referee', 'test', 'midnight'], shell=False)

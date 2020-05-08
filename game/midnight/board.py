@@ -45,8 +45,10 @@ class Board:
         Args:
             data: board json object
         """
-        self.colour = Board.WHITE if colour == "white" else Board.BLACK
-        self.opponent_colour = Board.BLACK if colour == "white" else Board.WHITE
+        self.init_self_data(colour)
+
+        # the steps have been taken
+        self.cost = 0
 
         # dict of all not-empty cells, key: (x, y) value: Cell(), must not contain empty cell
         self.board = dict()
@@ -61,6 +63,20 @@ class Board:
                 n, x, y = token[0], token[1], token[2]
                 self.board[(x, y)] = Cell(x, y, n, Board.BLACK)
 
+    def init_self_data(self, colour):
+        if colour == "white":
+            self.colour = Board.WHITE
+            self.opponent_colour = Board.BLACK
+            self.bottom_row = 0
+            self.second_bottom_row = 1
+            self.half_range = (0, 3)
+        else:
+            self.colour = Board.BLACK
+            self.opponent_colour = Board.WHITE
+            self.bottom_row = 7
+            self.second_bottom_row = 6
+            self.half_range = (4, 7)
+
     def take_action(self, action):
         """
         pre-condition: action is valid
@@ -68,6 +84,7 @@ class Board:
         Args:
             action: tuple (n, x, y, nextX, nextY)
         """
+        self.cost += 1
         if action[0] == "BOOM":
             x, y = action[1]
             self.boom(x, y)
@@ -224,6 +241,10 @@ class Board:
         board.board = deepcopy(self.board)
         board.colour = self.colour
         board.opponent_colour = self.opponent_colour
+        board.cost = self.cost
+        board.bottom_row = self.bottom_row
+        board.second_bottom_row = self.second_bottom_row
+        board.half_range = self.half_range
         return board
 
     def __hash__(self):
