@@ -1,12 +1,12 @@
 {
-  "token-diff": 0,
-  "marginal-rate": 0,
-  "cornered-rate": 0,
-  "stack-rate": 0,
-  "early_non_bottom_num": 0,
-  "max-own-partition-token-diff": 0,
-  "max-opponent-partition-token-diff": 0,
-  "own-vulnerability-reachability": 0,
-  "opponent-vulnerability-reachability": 0,
-  "opponent-leftover-chasing": 0
+  "token-diff": 2,
+  "marginal-rate": -0.1,
+  "cornered-rate": -0.2,
+  "average-stack-score": 1,
+  "early-non-bottom-num": 0.5,
+  "max-own-partition-token-diff": 1,
+  "max-opponent-partition-token-diff": -1,
+  "own-vulnerability-reachability": -0.5,
+  "opponent-vulnerability-reachability": 0.5,
+  "opponent-leftover-chasing": 1
 }

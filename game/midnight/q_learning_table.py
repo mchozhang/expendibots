@@ -8,14 +8,13 @@ from midnight.board_util import BoardUtil
 
 
 class ApproximateQLearning:
-    def __init__(self, values_file):
+    def __init__(self, values_file, epsilon=1):
         # learning rate
         self.alpha = 0.01
         # reward decay
         self.gamma = 0.9
         # e-greedy
-        self.epsilon = 0.8
-        # self.epsilon = 0.9
+        self.epsilon = epsilon
 
         self.value_file = values_file
         with open(values_file, 'r') as file:
@@ -49,7 +48,6 @@ class ApproximateQLearning:
         else:
             # random action for learning
             action = valid_actions[random.randint(0, len(valid_actions) - 1)]
-            print("random action:", action)
         return action
 
     def learn(self, board, next_board, action, reward):
@@ -81,7 +79,7 @@ class ApproximateQLearning:
         features["token-diff"] = own_token_num - opponent_token_num
         features["marginal-rate"] = own_marginal_token_num / own_token_num if own_token_num else 1
         features["cornered-rate"] = own_cornered_token_num / own_token_num if own_token_num else 1
-        features["stack-rate"] = own_token_num / own_cell_num if own_token_num else 1
+        features["average-stack-score"] = BoardUtil.average_stack_score(next_board)
         features["early-non-bottom-num"] = BoardUtil.early_non_bottom_num(next_board)
 
         # partition kill rate
@@ -99,7 +97,6 @@ class ApproximateQLearning:
         opponent_vulnerability_reachability = BoardUtil.partition_vulnerability(opponent_vulnerable_spots)
         features["own-vulnerability-reachability"] = own_vulnerability_reachability
         features["opponent-vulnerability-reachability"] = opponent_vulnerability_reachability
-        # features["average-own-vulnerable-value"] = BoardUtil.average_vulnerable_value(own_vulnerable_spots, own_token_num)
         features["opponent-leftover-chasing"] = BoardUtil.opponent_leftover_chasing(next_board, opponent_vulnerable_spots)
 
         for name, value in features.items():

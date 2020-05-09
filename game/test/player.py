@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from midnight.board import BoardUtil, Board
-from midnight.player import GamePlayer
+from midnight.player import TrainingPlayer
 import os, json, random
 
 class Player:
@@ -12,7 +12,7 @@ class Player:
         self.last_action = None
         self.last_board = None
         self.cost = 0
-        self.player = GamePlayer(self.colour)
+        self.player = TrainingPlayer(self.colour)
         dir_path = os.path.dirname(os.path.realpath(__file__))
         value_file_name = "white-weights.json" if colour == "white" else "black-weights.json"
         value_file_path = os.path.join(dir_path, value_file_name)

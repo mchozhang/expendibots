@@ -8,4 +8,6 @@
 # example import below, you can define it in another file and import
 # it into this module with the name 'Player':
 
+# from midnight.player import TrainingPlayer as Player
 from midnight.player import GamePlayer as Player
+

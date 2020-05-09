@@ -10,7 +10,8 @@ class BoardUtil:
     static utility methods or objects for Board
     """
     # stack score table
-    stack_score_table = {2: 1, 3: 2.5, 4: 4.5, 5: 5, 6: 6}
+    MAX_STACK_SCORE = 3
+    stack_score_table = {1: 0, 2: 0.4, 3: 1, 4: 1.8, 5: 2.5, 6: 3}
 
     cardinal = dict()
     surround = dict()
@@ -64,7 +65,7 @@ class BoardUtil:
             post_board = mid_board
 
         reward += BoardUtil.token_diff_score(pre_board, mid_board, post_board, own_action, opponent_action)
-        reward += BoardUtil.early_stack_score(post_board)
+        reward += BoardUtil.stack_score(post_board)
         reward += BoardUtil.vulnerable_score(post_board, own_action)
         reward += BoardUtil.partition_token_diff_score(post_board)
 
@@ -119,7 +120,7 @@ class BoardUtil:
         return score
 
     @staticmethod
-    def early_stack_score(board):
+    def stack_score(board):
         """
         give reward for forming new stacks and for cells in corners and borders
         Args:
@@ -131,15 +132,32 @@ class BoardUtil:
         own_token_num, own_cell_num = board.own_token_cell_num()
 
         for cell in board.get_own_cells():
-            if 1 < cell.n:
-                n = cell.n if cell.n < 7 else 6
-                score += BoardUtil.stack_score_table[n]
+            # get stack score from score table
+            score += BoardUtil.stack_score_table.get(cell.n, BoardUtil.MAX_STACK_SCORE)
+
             # deduction for cornered cell
             if BoardUtil.is_cornered(cell):
-                score -= 0.5
+                score -= 0.3
+            # bonus for non-marginal cell
             if not BoardUtil.is_marginal(cell):
-                score += 0.3
-        return score / own_token_num
+                score += 0.1
+        return score / own_token_num if own_token_num else 0
+
+    @staticmethod
+    def average_stack_score(board):
+        """
+        average score for own stacks
+        Args:
+            board: board object
+        Returns:
+            float, average stack score value
+        """
+        cells = board.get_own_cells()
+
+        if cells:
+            return sum([BoardUtil.stack_score_table.get(cell.n, BoardUtil.MAX_STACK_SCORE) for cell in cells]) / len(cells)
+        else:
+            return 0
 
     @staticmethod
     def early_non_bottom_num(board):
@@ -152,7 +170,7 @@ class BoardUtil:
         """
         # only in early stage
         if board.cost < 13:
-            return sum([cell.n for cell in board.get_own_cells if cell.y != board.bottom_row])
+            return sum([cell.n for cell in board.get_own_cells() if cell.y != board.bottom_row])
         return 0
 
     @staticmethod

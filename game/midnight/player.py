@@ -8,7 +8,7 @@ import os
 import json
 
 
-class GamePlayer:
+class TrainingPlayer:
     def __init__(self, colour):
         """
         This method is called once at the beginning of the game to initialise
@@ -34,7 +34,7 @@ class GamePlayer:
             BoardUtil.initialize(json.load(util_file))
 
             board_data = json.load(board_file)
-            self.q_table = ApproximateQLearning(value_file_path)
+            self.q_table = ApproximateQLearning(value_file_path, epsilon=0.9)
             self.board = Board(board_data, colour)
 
     def action(self):
@@ -85,3 +85,29 @@ class GamePlayer:
             self.q_table.write_value_file()
 
         self.board = next_board
+
+
+class GamePlayer:
+    def __init__(self, colour):
+        self.colour = colour
+        self.last_action = None
+        self.last_board = None
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        value_file_name = "white-weights.json" if colour == "white" else "black-weights.json"
+        value_file_path = os.path.join(dir_path, value_file_name)
+        initial_board_data = os.path.join(dir_path, "initial-board.json")
+        board_util_data = os.path.join(dir_path, "board-util-data.json")
+
+        with open(initial_board_data) as board_file, open(board_util_data) as util_file:
+            BoardUtil.initialize(json.load(util_file))
+
+            board_data = json.load(board_file)
+            self.q_table = ApproximateQLearning(value_file_path, epsilon=1)
+            self.board = Board(board_data, colour)
+
+    def action(self):
+        return self.q_table.choose_action(self.board)
+
+    def update(self, colour, action):
+        self.board.take_action(action)
