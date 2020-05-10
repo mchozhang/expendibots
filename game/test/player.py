@@ -5,6 +5,7 @@ from midnight.board import BoardUtil, Board
 from midnight.player import TrainingPlayer
 import os, json, random
 
+
 class Player:
 
     def __init__(self, colour):
@@ -26,21 +27,27 @@ class Player:
             self.board = Board(board_data, colour)
 
     def action(self):
-        steps = [('MOVE', 1, (6,0), (6,1)),
-                 ('MOVE', 2, (6,1), (6,3)),
-                 ('MOVE', 1, (6,3), (6, 5)),
-                 ('MOVE', 1, (6,5), (6,6)),
-                 ('BOOM', (6, 6))]
-
-        if self.cost < len(steps):
-            return steps[self.cost]
+        # steps = [('MOVE', 1, (6,0), (6,1)),
+        #          ('MOVE', 2, (6,1), (6,3)),
+        #          ('MOVE', 1, (6,3), (6, 5)),
+        #          ('MOVE', 1, (6,5), (6,6)),
+        #          ('BOOM', (6, 6))]
+        #
+        # if self.cost < len(steps):
+        #     return steps[self.cost]
+        # else:
+        #     action = self.player.action()
+        #     return action
+        values = input('input action:').split(' ')
+        values = [int(i) for i in values]
+        if len(values) == 2:
+            return 'BOOM', (values[0], values[1])
         else:
-            action = self.player.action()
-            return action
+            return 'MOVE', values[0], (values[1], values[2]), (values[3], values[4])
 
     def update(self, colour, action):
         if colour == self.colour:
             self.cost += 1
 
         self.board.take_action(action)
-        self.player.update(colour,action)
+        self.player.update(colour, action)
