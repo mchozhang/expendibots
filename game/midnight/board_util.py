@@ -270,13 +270,16 @@ class BoardUtil:
                         vul_spots[next_pos]["value"] += 1
                         vul_spots[next_pos][current_cell.colour] += 1
                     else:
-                        vul_spots[next_pos] = {"value": 1, "reaches": []}
+                        spot = dict()
+                        spot["value"] = 1
+                        spot["reaches"] = []
                         if current_cell.colour == "white":
-                            vul_spots["white"] = 1
-                            vul_spots["black"] = 0
+                            spot["white"] = 1
+                            spot["black"] = 0
                         else:
-                            vul_spots["white"] = 0
-                            vul_spots["black"] = 1
+                            spot["white"] = 0
+                            spot["black"] = 1
+                        vul_spots[next_pos] = spot
                 elif next_pos not in visited:
                     # cell in partition
                     recursive_search(next_pos, connected_list)
@@ -297,10 +300,10 @@ class BoardUtil:
             if partition[own_colour] > partition[opponent_colour]:
                 for pos, spot in vul_spots.items():
                     for oc in opponent_cells:
-                        if oc not in partition and pos not in BoardUtil.surround[oc.pos][oc.n]:
+                        if oc not in partition and pos not in BoardUtil.cardinal[oc.pos][oc.n]:
                             spot["reaches"].append(oc)
 
-        return partitions
+        return partitions, vul_spots
 
     @staticmethod
     def max_partition_token_diff(partitions, colour):
@@ -315,7 +318,7 @@ class BoardUtil:
         """
         own_colour = colour
         opponent_colour = "black" if colour == "white" else "white"
-        return max([p[opponent_colour] - p[own_colour] for p in partitions])
+        return max([p[opponent_colour] - p[own_colour] for p in partitions]) if partitions else 0
 
     @staticmethod
     def partition_token_diff_score(board):
@@ -350,7 +353,7 @@ class BoardUtil:
 
         # find max vulnerability score
         max_score = 0
-        for spot in spots:
+        for pos, spot in spots.items():
             if spot["reaches"]:
                 token_diff = spot[own_colour] - spot[opponent_colour] - min([c.n for c in spot["reaches"]])
                 vul_value = spot["value"]
