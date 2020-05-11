@@ -82,22 +82,20 @@ class ApproximateQLearning:
         features["average-stack-score"] = BoardUtil.average_stack_score(next_board)
         features["early-non-bottom-num"] = BoardUtil.early_non_bottom_num(next_board)
 
-        # partition kill rate
-        own_partitions = BoardUtil.get_partitions(next_board, True)
-        opponent_partitions = BoardUtil.get_partitions(next_board, False)
+        # partition token diff
+        own_partitions, own_vul_spots = BoardUtil.partitions_and_vulnerable_spots(next_board, True)
+        opponent_partitions, opponent_vul_spots = BoardUtil.partitions_and_vulnerable_spots(next_board, False)
         own_partition_token_diff = BoardUtil.max_partition_token_diff(own_partitions, next_board.colour)
         opponent_partition_token_diff = BoardUtil.max_partition_token_diff(opponent_partitions, next_board.opponent_colour)
-        features["max-own-partition-token-diff"] = own_partition_token_diff if own_partition_token_diff > 1 else 0
-        features["max-opponent-partition-token-diff"] = opponent_partition_token_diff if opponent_partition_token_diff > 1 else 0
+        features["max-own-partition-token-diff"] = own_partition_token_diff
+        features["max-opponent-partition-token-diff"] = opponent_partition_token_diff
 
         # vulnerable spots
-        own_vulnerable_spots = BoardUtil.vulnerable_spots(next_board, own_partitions, True)
-        opponent_vulnerable_spots = BoardUtil.vulnerable_spots(next_board, opponent_partitions, False)
-        own_vulnerability_reachability = BoardUtil.partition_vulnerability(own_vulnerable_spots)
-        opponent_vulnerability_reachability = BoardUtil.partition_vulnerability(opponent_vulnerable_spots)
-        features["own-vulnerability-reachability"] = own_vulnerability_reachability
-        features["opponent-vulnerability-reachability"] = opponent_vulnerability_reachability
-        features["opponent-leftover-chasing"] = BoardUtil.opponent_leftover_chasing(next_board, opponent_vulnerable_spots)
+        own_vul_score = BoardUtil.max_vulnerability_score(own_vul_spots, next_board.colour)
+        opponent_vul_score = BoardUtil.max_vulnerability_score(opponent_vul_spots, next_board.opponent_colour)
+        features["own-vulnerability-reachability"] = own_vul_score
+        features["opponent-vulnerability-reachability"] = opponent_vul_score
+        features["opponent-leftover-chasing"] = BoardUtil.opponent_leftover_chasing(next_board, opponent_vul_spots)
 
         for name, value in features.items():
             features[name] /= 10

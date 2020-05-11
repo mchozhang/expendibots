@@ -38,6 +38,7 @@ class Player:
         # else:
         #     action = self.player.action()
         #     return action
+        print('bot: ', self.player.action())
         values = input('input action:').split(' ')
         values = [int(i) for i in values]
         if len(values) == 2:

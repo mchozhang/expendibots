@@ -2,10 +2,10 @@
   "token-diff": 3,
   "marginal-rate": -0.1,
   "cornered-rate": -0.2,
-  "average-stack-score": 1,
+  "average-stack-score": 0.8,
   "early-non-bottom-num": 0.5,
   "max-own-partition-token-diff": 1,
-  "max-opponent-partition-token-diff": -1,
+  "max-opponent-partition-token-diff": -3,
   "own-vulnerability-reachability": -0.5,
   "opponent-vulnerability-reachability": 0.5,
   "opponent-leftover-chasing": 1

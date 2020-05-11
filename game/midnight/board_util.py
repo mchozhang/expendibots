@@ -66,7 +66,7 @@ class BoardUtil:
 
         reward += BoardUtil.token_diff_score(pre_board, mid_board, post_board, own_action, opponent_action)
         reward += BoardUtil.stack_score(post_board)
-        reward += BoardUtil.vulnerable_score(post_board, own_action)
+        reward += BoardUtil.vulnerability_score(post_board, own_action)
         reward += BoardUtil.partition_token_diff_score(post_board)
 
         return reward
@@ -155,7 +155,8 @@ class BoardUtil:
         cells = board.get_own_cells()
 
         if cells:
-            return sum([BoardUtil.stack_score_table.get(cell.n, BoardUtil.MAX_STACK_SCORE) for cell in cells]) / len(cells)
+            return sum([BoardUtil.stack_score_table.get(cell.n, BoardUtil.MAX_STACK_SCORE) for cell in cells]) / len(
+                cells)
         else:
             return 0
 
@@ -218,129 +219,151 @@ class BoardUtil:
         return sum([c.n for c in board.board.values() if c.colour == board.colour and BoardUtil.is_cornered(c)])
 
     @staticmethod
-    def get_partitions(board, is_own):
+    def partitions_and_vulnerable_spots(board, is_own):
         """
-        get partitions that contain own(or opponent) cells,
-        a partition is a group of connected cells that will boom together
+        get a list of partitions that contain own(or opponent) cells and
+        a partition is a group of connected cells that will boom together,
+        each partition item has the following structure
+        {
+          "cells": [],           # cells in partition
+          "black": <black_cell_number>
+          "white": <white_cell_number>
+        }
+        vul_spots has the following structure
+        {
+            (x, y): {
+                "value": <vul_value>
+                "reaches": []        # opponent cells that can reach this spot
+                "black": <int>       # black token num that will be eliminated if boom here
+                "white": <int>       # white token num that will be eliminated if boom here
+            }
+        }
         Args:
             board: board object
             is_own: own partitions or opponent partitions
         Returns:
-            list of cell lists that contain all cells forming a partition
+            a tuple of
+            list of partition items that contain at least one own(or opponent) cell,
+            dictionary of vulnerable spots
         """
         cells = board.get_own_cells() if is_own else board.get_opponent_cells()
+        opponent_cells = board.get_opponent_cells() if is_own else board.get_own_cells()
+        own_colour = board.colour if is_own else board.opponent_colour
+        opponent_colour = board.opponent_colour if is_own else board.colour
 
         visited = set()
         partitions = []
+        vul_spots = dict()
 
-        def recursive_search(x, y, part):
+        def recursive_search(pos, connected_list):
             """
             find all the cells that belong to a partition
             """
-            part.append(board.board[(x, y)])
-            visited.add((x, y))
+            current_cell = board.board[pos]
+            connected_list.append(current_cell)
+            visited.add(pos)
 
-            for (next_x, next_y) in BoardUtil.surround[(x, y)]:
-                if (next_x, next_y) in board.board and (next_x, next_y) not in visited:
-                    recursive_search(next_x, next_y, part)
+            for next_pos in BoardUtil.surround[pos]:
+                if next_pos not in board.board:
+                    # a vulnerable spot
+                    if next_pos in vul_spots:
+                        vul_spots[next_pos]["value"] += 1
+                        vul_spots[next_pos][current_cell.colour] += 1
+                    else:
+                        vul_spots[next_pos] = {"value": 1, "reaches": []}
+                        if current_cell.colour == "white":
+                            vul_spots["white"] = 1
+                            vul_spots["black"] = 0
+                        else:
+                            vul_spots["white"] = 0
+                            vul_spots["black"] = 1
+                elif next_pos not in visited:
+                    # cell in partition
+                    recursive_search(next_pos, connected_list)
 
+        # find partitions
         for cell in cells:
-            partition = []
             if cell.pos not in visited:
-                recursive_search(cell.x, cell.y, partition)
+                partition = dict()
+                partition_cells = []
+                recursive_search(cell.pos, partition_cells)
+                partition["cells"] = partition_cells
+                partition["black"] = sum([cell.n for cell in partition_cells if cell.colour == "black"])
+                partition["white"] = sum([cell.n for cell in partition_cells if cell.colour == "white"])
                 partitions.append(partition)
+
+        # find reachable opponent cells for partitions containing more own tokens
+        for partition in partitions:
+            if partition[own_colour] > partition[opponent_colour]:
+                for pos, spot in vul_spots.items():
+                    for oc in opponent_cells:
+                        if oc not in partition and pos not in BoardUtil.surround[oc.pos][oc.n]:
+                            spot["reaches"].append(oc)
 
         return partitions
 
     @staticmethod
     def max_partition_token_diff(partitions, colour):
         """
-        calculate the maximum token difference of all own partitions
+        calculate the maximum token difference of all own partitions,
+        token-diff = opponent_num - own_num
         Args:
             partitions: partition list
             colour: own color
         Returns:
             maximum token difference
         """
-        max_num = 0
-        for partition in partitions:
-            own_num, opponent_num = 0, 0
-            for cell in partition:
-                if cell.colour == colour:
-                    own_num += cell.n
-                else:
-                    opponent_num += cell.n
-
-            num = opponent_num - own_num
-            if num > max_num:
-                max_num = num
-        return max_num
+        own_colour = colour
+        opponent_colour = "black" if colour == "white" else "white"
+        return max([p[opponent_colour] - p[own_colour] for p in partitions])
 
     @staticmethod
     def partition_token_diff_score(board):
-        own_partition = BoardUtil.get_partitions(board, True)
+        """
+        reward for maximum token difference in partitions
+        Args:
+            board: board object
+        Returns:
+            score
+        """
+        own_partition, _ = BoardUtil.partitions_and_vulnerable_spots(board, True)
         own_partition_token_diff = BoardUtil.max_partition_token_diff(own_partition, board.colour)
 
-        opponent_partition = BoardUtil.get_partitions(board, False)
+        opponent_partition, _ = BoardUtil.partitions_and_vulnerable_spots(board, False)
         opponent_partition_token_diff = BoardUtil.max_partition_token_diff(opponent_partition, board.opponent_colour)
         return (own_partition_token_diff - opponent_partition_token_diff) / 2
 
     @staticmethod
-    def vulnerable_spots(board, partitions, is_own):
-        """
-        find the spots that surround a partition and count their overlapping numbers
-        Args:
-            board: board object
-            partitions: list of partitions
-            is_own: is own partition
-        Returns:
-            counter of the vulnerable value of the spots
-        """
-        spots = dict()
-        opponent_cells = board.get_opponent_cells() if is_own else board.get_own_cells()
-        partition_colour = board.colour if is_own else board.opponent_colour
-
-        # partitions that contain more main colour cells
-        vulnerable_partitions = []
-        for partition in partitions:
-            count = len([cell for cell in partition if cell.colour == partition_colour])
-            if count * 2 > len(partition):
-                vulnerable_partitions.append(partition)
-
-        # for each vulnerable partition,
-        # find vulnerable spots and the opponent cells that can reach to them
-        for partition in vulnerable_partitions:
-            for cell in partition:
-                for pos in BoardUtil.surround[cell.pos]:
-                    if pos not in board.board:
-                        if pos in spots:
-                            spots[pos]["value"] += 1
-                        else:
-                            spot = {"value": 1, "reaches": []}
-                            for oc in opponent_cells:
-                                if oc not in partition and pos in BoardUtil.cardinal[oc.pos][oc.n]:
-                                    spot["reaches"].append(pos)
-                            spots[pos] = spot
-        return spots
-
-    @staticmethod
-    def partition_vulnerability(spots):
+    def max_vulnerability_score(spots, own_colour):
         """
         maximum vulnerable value caused that the cells that can reach opponent's vulnerable spots
         Args:
             spots: partition vulnerable spots dictionary
+            own_colour: main partition colour
         Returns:
             max vulnerable value
         """
-        values = [spot["value"] for spot in spots.values() if spot["reaches"]]
-        max_value = max(values) if values else 0
-        # vulnerable values greater than 1 will be seen as vulnerability
-        return max_value if max_value > 1 else 0
+        opponent_colour = "white" if own_colour == "black" else "black"
+
+        # probability for each max-vulnerability-value to successfully kill opponent tokens
+        probability_table = {0: 0, 1: 0.3, 2: 0.7, 3: 0.8, 4: 0.9}
+
+        # find max vulnerability score
+        max_score = 0
+        for spot in spots:
+            if spot["reaches"]:
+                token_diff = spot[own_colour] - spot[opponent_colour] - min([c.n for c in spot["reaches"]])
+                vul_value = spot["value"]
+                score = token_diff * probability_table.get(vul_value, 0.9)
+
+                if score > max_score:
+                    max_score = score
+        return max_score
 
     @staticmethod
-    def vulnerable_score(board, own_action):
+    def vulnerability_score(board, own_action):
         """
-        score of own vulnerabilities and opponent vulnerabilities
+        reward for own vulnerabilities and opponent vulnerabilities
         Args:
             board: board object
             own_action: action
@@ -348,29 +371,14 @@ class BoardUtil:
             score
         """
         if own_action[0] == "MOVE":
-            opponent_partitions = BoardUtil.get_partitions(board, False)
-            opponent_vulnerable_spots = BoardUtil.vulnerable_spots(board, opponent_partitions, False)
-            opponent_vulnerable_value = BoardUtil.partition_vulnerability(opponent_vulnerable_spots)
+            opponent_partitions, opponent_vul_spots = BoardUtil.partitions_and_vulnerable_spots(board, False)
+            opponent_vulnerable_score = BoardUtil.max_vulnerability_score(opponent_vul_spots, board.opponent_colour)
 
-            own_partitions = BoardUtil.get_partitions(board, True)
-            own_vulnerable_spots = BoardUtil.vulnerable_spots(board, own_partitions, True)
-            own_vulnerable_value = BoardUtil.partition_vulnerability(own_vulnerable_spots)
+            own_partitions, own_vul_spots = BoardUtil.partitions_and_vulnerable_spots(board, True)
+            own_vulnerable_value = BoardUtil.max_vulnerability_score(own_vul_spots, board.colour)
 
-            return (opponent_vulnerable_value - own_vulnerable_value) / 3
+            return (opponent_vulnerable_score - own_vulnerable_value) / 2
         return 0
-
-    @staticmethod
-    def average_vulnerable_value(spots, token_num):
-        """
-        average vulnerable value for every token
-        Args:
-            spots: counter of vulnerable spots
-            token_num: token number
-        Returns:
-            value
-        """
-        values = sum([spot["value"] for spot in spots.values() if spot["value"] > 1])
-        return values / token_num if token_num else 0
 
     @staticmethod
     def opponent_leftover_chasing(board, spots):
