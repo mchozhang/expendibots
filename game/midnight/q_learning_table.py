@@ -42,7 +42,7 @@ class ApproximateQLearning:
                     max_value = value
                 elif value == max_value:
                     max_indices.append(i + 1)
-            print(max_value, max_indices)
+
             # randomly pick an action with max q value
             action = valid_actions[max_indices[random.randint(0, len(max_indices) - 1)]]
         else:

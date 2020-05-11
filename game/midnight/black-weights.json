@@ -6,7 +6,7 @@
   "early-non-bottom-num": 0.5,
   "max-own-partition-token-diff": 1,
   "max-opponent-partition-token-diff": -3,
-  "own-vulnerability-reachability": -0.5,
-  "opponent-vulnerability-reachability": 0.5,
+  "own-vulnerability-reachability": -1,
+  "opponent-vulnerability-reachability": 1,
   "opponent-leftover-chasing": 1
 }

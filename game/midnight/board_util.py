@@ -300,7 +300,7 @@ class BoardUtil:
                 for vul_pos, spot in vul_spots.items():
                     for oc in opponent_cells:
                         if oc not in partition and vul_pos in BoardUtil.cardinal[oc.pos][oc.n]:
-                            spot["reaches"].append(oc)
+                            spot["reaches"].append(oc.pos)
 
         return partitions, vul_spots
 
@@ -355,7 +355,7 @@ class BoardUtil:
         max_score = 0
         for pos, spot in spots.items():
             if spot["reaches"]:
-                token_diff = spot[own_colour] - spot[opponent_colour] - min([c.n for c in spot["reaches"]])
+                token_diff = spot[own_colour] - spot[opponent_colour] - 1
                 vul_value = spot["value"]
                 score = token_diff * probability_table.get(vul_value, 0.9)
 
