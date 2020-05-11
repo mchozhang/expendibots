@@ -153,10 +153,9 @@ class BoardUtil:
             float, average stack score value
         """
         cells = board.get_own_cells()
-
-        if cells:
-            return sum([BoardUtil.stack_score_table.get(cell.n, BoardUtil.MAX_STACK_SCORE) for cell in cells]) / len(
-                cells)
+        if board.get_own_cells():
+            return \
+                sum([BoardUtil.stack_score_table.get(cell.n, BoardUtil.MAX_STACK_SCORE) for cell in cells]) / len(cells)
         else:
             return 0
 
@@ -298,9 +297,9 @@ class BoardUtil:
         # find reachable opponent cells for partitions containing more own tokens
         for partition in partitions:
             if partition[own_colour] > partition[opponent_colour]:
-                for pos, spot in vul_spots.items():
+                for vul_pos, spot in vul_spots.items():
                     for oc in opponent_cells:
-                        if oc not in partition and pos not in BoardUtil.cardinal[oc.pos][oc.n]:
+                        if oc not in partition and vul_pos in BoardUtil.cardinal[oc.pos][oc.n]:
                             spot["reaches"].append(oc)
 
         return partitions, vul_spots
@@ -318,7 +317,8 @@ class BoardUtil:
         """
         own_colour = colour
         opponent_colour = "black" if colour == "white" else "white"
-        return max([p[opponent_colour] - p[own_colour] for p in partitions]) if partitions else 0
+        max_diff = max([p[opponent_colour] - p[own_colour] for p in partitions]) if partitions else 0
+        return max_diff if max_diff > 0 else 0
 
     @staticmethod
     def partition_token_diff_score(board):
