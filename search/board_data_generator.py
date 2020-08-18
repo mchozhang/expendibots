@@ -17,19 +17,19 @@ if __name__ == "__main__":
             for y in range(8):
                 cardinal[str((x, y))] = dict()
                 accumulation = []
-                for step in range(1, 8):
+                for step in range(1, 13):
                     cardinal[str((x, y))][step] = accumulation.copy()
                     for direction in cardinal_dirs:
-                        nextX, nextY = x + direction[0] * step, y + direction[1] * step
-                        if -1 < nextX < 8 and -1 < nextY < 8:
-                            accumulation.append(str((nextX, nextY)))
-                            cardinal[str((x, y))][step].append(str((nextX, nextY)))
+                        next_x, next_y = x + direction[0] * step, y + direction[1] * step
+                        if -1 < next_x < 8 and -1 < next_y < 8:
+                            accumulation.append(str((next_x, next_y)))
+                            cardinal[str((x, y))][step].append(str((next_x, next_y)))
 
                 surround[str((x, y))] = []
                 for direction in surround_dirs:
-                    nextX, nextY = x + direction[0], y + direction[1]
-                    if -1 < nextX < 8 and -1 < nextY < 8:
-                        surround[str((x, y))].append(str((nextX, nextY)))
+                    next_x, next_y = x + direction[0], y + direction[1]
+                    if -1 < next_x < 8 and -1 < next_y < 8:
+                        surround[str((x, y))].append(str((next_x, next_y)))
 
         board_data = dict()
         board_data["cardinal"] = cardinal

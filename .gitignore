@@ -136,4 +136,6 @@ dmypy.json
 
 # test file
 test.py
-.csv
+*.csv
+black.json
+white.json

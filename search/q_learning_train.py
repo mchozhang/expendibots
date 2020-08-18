@@ -44,7 +44,7 @@ def main():
                 if terminal:
                     break
 
-        ql.write_csv(os.path.join(dir_path, "level-1.csv"))
+        ql.write_csv()
 
 
 if __name__ == '__main__':

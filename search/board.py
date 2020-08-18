@@ -13,24 +13,24 @@ class Cell:
         self.x = x
         self.y = y
         self.n = n
-        self.color = color
+        self.colour = color
         self.pos = (x, y)
 
     def __repr__(self):
         s = str(self.n) + " " + str(self.pos)
-        return "⚫️" + s if self.color == Board.BLACK else "⚪️" + s
+        return "⚫️" + s if self.colour == Board.BLACK else "⚪️" + s
 
     def __lt__(self, other):
         return self.pos < other.pos
 
     def __eq__(self, other):
-        return self.pos == other.pos and self.n == other.n and self.color == other.colour
+        return self.pos == other.pos and self.n == other.n and self.colour == other.colour
 
     def __hash__(self):
-        return hash((self.pos, self.n, self.color))
+        return hash((self.pos, self.n, self.colour))
 
     def __deepcopy__(self, mem=None):
-        return type(self)(self.x, self.y, self.n, self.color)
+        return type(self)(self.x, self.y, self.n, self.colour)
 
 
 class Board:
@@ -87,7 +87,7 @@ class Board:
         a token at (x,y) moves to (next_x, next_y)
         """
         start_cell = self.board[(x, y)]
-        des_cell = self.board.get((next_x, next_y), Cell(next_x, next_y, 0, start_cell.color))
+        des_cell = self.board.get((next_x, next_y), Cell(next_x, next_y, 0, start_cell.colour))
 
         # update destination cell
         des_cell.n += n
@@ -140,14 +140,14 @@ class Board:
         # find all moves
         for cell in cells:
             x, y = cell.pos
-            n, color = cell.n, cell.color
+            n, color = cell.n, cell.colour
 
             # boom at this position
             actions.append((0, x, y, -1, -1))
 
             # find all valid moves
             for (nextX, nextY) in BoardUtil.cardinal[(x, y)][n]:
-                if (nextX, nextY) not in self.board or color == self.board[(nextX, nextY)].color:
+                if (nextX, nextY) not in self.board or color == self.board[(nextX, nextY)].colour:
                     actions += [(i, x, y, nextX, nextY) for i in range(1, n + 1)]
 
         return actions
