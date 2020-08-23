@@ -177,7 +177,7 @@ Therefore, we want our partition difference to be larger so that we can kill mor
 and fewer deaths. And we also want our opponents to have a lower partition difference so
 that they have to pay more to kill our tokens.
 
-*** Final Weight Convergence
+### Final Weight Convergence
 Usually, after the training of thousands of games, the weights will converge to stable values.
 Here is the final weights we have obtained.
 ```json
