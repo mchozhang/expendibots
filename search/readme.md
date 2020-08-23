@@ -1,6 +1,5 @@
 ## Weighted A* search
 
-
 ### Problem Formulation
 
 The game *Expendibots* has following properties: *observable*, *deterministic*, *sequential*, *static*, and *discrete*, which allow the solution to be seen as a sequence of actions. And therefore, we can transform it into a search problem as follows:

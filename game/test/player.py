@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# an agent using user input for every move to play against another agent,
+# this agent is used to test the 'agent' module
 
-from midnight.board import BoardUtil, Board
-from midnight.player import TrainingPlayer
-import os, json, random
+from agent.board import BoardUtil, Board
+from agent.player import TrainingPlayer
+import os
+import json
 
 
 class Player:
-
+    """
+    an agent requiring user to input every move
+    """
     def __init__(self, colour):
         self.colour = colour
         self.last_action = None
@@ -15,8 +20,6 @@ class Player:
         self.cost = 0
         self.player = TrainingPlayer(self.colour)
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        value_file_name = "white-weights.json" if colour == "white" else "black-weights.json"
-        value_file_path = os.path.join(dir_path, value_file_name)
         initial_board_data = os.path.join(dir_path, "initial-board.json")
         board_util_data = os.path.join(dir_path, "board-util-data.json")
 
@@ -27,18 +30,11 @@ class Player:
             self.board = Board(board_data, colour)
 
     def action(self):
-        # steps = [('MOVE', 1, (6,0), (6,1)),
-        #          ('MOVE', 2, (6,1), (6,3)),
-        #          ('MOVE', 1, (6,3), (6, 5)),
-        #          ('MOVE', 1, (6,5), (6,6)),
-        #          ('BOOM', (6, 6))]
-        #
-        # if self.cost < len(steps):
-        #     return steps[self.cost]
-        # else:
-        #     action = self.player.action()
-        #     return action
-        print('bot: ', self.player.action())
+        """
+        input 2 values to perform a BOOM, 5 values to perform a MOVE
+        Returns:
+            a tuple representing an action
+        """
         values = input('input action:').split(' ')
         values = [int(i) for i in values]
         if len(values) == 2:

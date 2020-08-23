@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from midnight.q_learning_table import ApproximateQLearning
-from midnight.board import Board
-from midnight.board_util import BoardUtil
+from agent.q_learning_table import ApproximateQLearning
+from agent.board import Board
+from agent.board_util import BoardUtil
 import os
 import json
 
 
 class TrainingPlayer:
+    """
+    An agent used to train the model using approximate Q learning
+    """
     def __init__(self, colour):
         """
         This method is called once at the beginning of the game to initialise
@@ -88,6 +91,9 @@ class TrainingPlayer:
 
 
 class GamePlayer:
+    """
+    The practical agent using the trained data to play the game
+    """
     def __init__(self, colour):
         self.colour = colour
         self.last_action = None

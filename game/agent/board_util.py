@@ -386,7 +386,8 @@ class BoardUtil:
     @staticmethod
     def opponent_leftover_chasing(board, spots):
         """
-        calculate the score of minimum distance between opponent's remain cells and your cells when having advantage
+        calculate the score of minimum distance between opponent's remain cells
+        and your cells when having advantage
         Args:
             board: board object
             spots: opponent vulnerable spots

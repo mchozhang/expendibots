@@ -5,7 +5,7 @@ define data structure of Board and Cell and static utility methods
 """
 
 from copy import deepcopy
-from midnight.board_util import BoardUtil
+from agent.board_util import BoardUtil
 
 
 class Cell:

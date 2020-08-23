@@ -4,7 +4,7 @@
 import numpy as np
 import random
 import json
-from midnight.board_util import BoardUtil
+from agent.board_util import BoardUtil
 
 
 class ApproximateQLearning:
